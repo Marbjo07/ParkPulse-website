@@ -41,13 +41,54 @@ function generateDropdownMenu() {
     });
 }
 
-var tileInfo = [];
+function eraseAreaZoomRecursively(x, y, zoom) {
+    if (zoom >= 17)
+        return;
+
+    let tileName;
+    for (let y_offset = 0; y_offset <= 1; y_offset++) {
+        for (let x_offset = 0; x_offset <= 1; x_offset++) {
+            tileName = getTileName(x * 2 + x_offset, y * 2 + y_offset);
+            tileInfo[tileName] = { taken: true };
+            eraseAreaZoomRecursively(x * 2 + x_offset, y * 2 + y_offset, zoom + 1)
+        }
+    }
+}
+
+var tileInfo = {};
 function eraseArea(top, left, bottom, right) {
-    console.log(`erasing from (${top}, ${left}) to (${bottom} ${right})`)
+    console.log(`Erasing from (${top}, ${left}) to (${bottom} ${right})`)
+
+    let numTakenTiles = Object.keys(tileInfo).length;
+    // erase tiles at current zoom level and inwards
+    for (let y = Math.min(top, bottom); y < Math.max(top, bottom); y++) {
+        for (let x = Math.min(left, right); x < Math.max(left, right); x++) {
+            let tileName = getTileName(x, y);
+            tileInfo[tileName] = { taken: true };
+            eraseAreaZoomRecursively(x, y, map.getZoom());
+        }
+    }
+
+    // delete irrelevant tiles
+    console.time("filter tileInfo");
+    for (const key in tileInfo) {
+        if (!isValidTileName(key)) {
+            delete tileInfo[key];
+        }
+    }
+    console.timeEnd("filter tileInfo");
+
+
+    console.log(`Erased ${Object.keys(tileInfo).length - numTakenTiles} tiles`);
+
+    // refresh
+    map.overlayMapTypes.removeAt(0);
+    map.overlayMapTypes.push(maptiler);
 }
 
 let current_city_name = Object.keys(city_coord_map)[0];
 
+// magic from stackoverflow
 function pixelToLatlng(xcoor, ycoor) {
     var ne = map.getBounds().getNorthEast();
     var sw = map.getBounds().getSouthWest();
@@ -69,11 +110,11 @@ function toggleEraserTool(force, value) {
 
     if (force) {
         eraserOn = value;
-        console.log("Settng eraser to " + (value ? "on" : "off"));
+        console.debug("Settng eraser to " + (value ? "on" : "off"));
     } else {
         eraserOn = !eraserOn;
     }
-    console.log("Eraser is now " + (eraserOn ? "on" : "off"));
+    console.debug("Eraser is now " + (eraserOn ? "on" : "off"));
     map.setOptions({ draggable: !eraserOn });
 
 
@@ -110,10 +151,12 @@ function toggleEraserTool(force, value) {
             let latlng = pixelToLatlng(x1, y1);
 
             let currentZoom = map.getZoom();
-            let startTile = { x: latToTile(startLatLng.lat(), currentZoom), y: lngToTile(startLatLng.lng(), currentZoom) };
-            let endTile =   { x: latToTile(latlng.lat(), currentZoom), y: lngToTile(latlng.lng(), currentZoom) };
 
-            eraseArea(endTile.x, endTile.y, startTile.x, startTile.y);
+            eraseArea(
+                latToTile(startLatLng.lat(), currentZoom), 
+                lngToTile(startLatLng.lng(), currentZoom), 
+                latToTile(latlng.lat(), currentZoom), 
+                lngToTile(latlng.lng(), currentZoom));
         };
     } else {
         div.hidden = 1; //Hide the div
@@ -123,25 +166,40 @@ function toggleEraserTool(force, value) {
     }
 }
 
+function getTileName(x, y) {
+    return "img_" + x + "_" + y + ".png";
+}
+
+function isValidTileName(name) {
+    return validTileRequests.includes(name)
+}
 
 function fetchTileLocation(x, y, zoom) {
-    let tileName = "img_" + x + "_" + y + ".png";
-    if (!validTileRequests.includes(tileName)) {
-        return "black.png";
+    let tileName = getTileName(x, y);
+    if (!isValidTileName(tileName)) {
+        return "white.png";
     }
 
-    if (tileInfo[tileName] == null || (tileInfo[tileName] != null && !tileInfo[tileName].taken)) {
-        return 'https://pulseoverlaystorage.blob.core.windows.net/cities/' + current_city_name + '/' + zoom + '/img_' + x + '_' + y + '.png?raw=True&' + SAS_key;
+    let fetchURL = 'https://pulseoverlaystorage.blob.core.windows.net/cities/' + current_city_name + '/' + zoom + '/img_' + x + '_' + y + '.png?raw=True&' + SAS_key;
+    // no extra info exists
+    if (tileInfo[tileName] == null) {
+        return fetchURL;
+    }
+    // if info indicates somethinge else than taken
+    else if (!tileInfo[tileName].taken) {
+        return fetchURL;
+    }
+    // 
+    else {
     }
 }
 
+var maptiler;
 let validTileRequests;
 async function initialize() {
 
 
     window.addEventListener("keyup", function (event) {
-        console.log("key up!");
-        console.log(event)
         if (event.key == "Control") {
             toggleEraserTool(true, false);
         }
@@ -170,12 +228,13 @@ async function initialize() {
         });
     console.log(validTileRequests);
 
-    var maptiler = new google.maps.ImageMapType({
+    maptiler = new google.maps.ImageMapType({
         getTileUrl: function (coord, zoom) {
             return fetchTileLocation(coord.x, coord.y, zoom);
         },
         tileSize: new google.maps.Size(256, 256),
-        isPng: true
+        isPng: true,
+        opacity: 0.7
     });
 
     let [lat, lng] = Object.values(city_coord_map)[0];
