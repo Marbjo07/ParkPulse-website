@@ -82,6 +82,7 @@ body {
   border: 5px dotted #000;
   position: absolute;
   z-index: 1000;
+  pointer-events: none;
 }
 
 /* Center the login popup */
