@@ -1,6 +1,8 @@
 // Define the initialize function
 var map;
 
+API_SERVER_LOCATION = "http://127.0.0.1:5000"
+
 var city_coord_map = {
     "berlin": [52.520008, 13.404954],
     "gothenburg": [57.7162651, 11.9774066],
@@ -148,15 +150,28 @@ function toggleEraserTool(force, value) {
             x1 = e.clientX; //Set the initial X
             y1 = e.clientY; //Set the initial Y
             reCalc();
-            let latlng = pixelToLatlng(x1, y1);
+            let endLatlng = pixelToLatlng(x1, y1);
 
-            let currentZoom = map.getZoom();
-
+            // erase base zoom
             eraseArea(
-                latToTile(startLatLng.lat(), currentZoom), 
-                lngToTile(startLatLng.lng(), currentZoom), 
-                latToTile(latlng.lat(), currentZoom), 
-                lngToTile(latlng.lng(), currentZoom));
+                latToTile(startLatLng.lat(), 17),
+                lngToTile(startLatLng.lng(), 17),
+                latToTile(endLatlng.lat(), 17),
+                lngToTile(endLatlng.lng(), 17));
+
+            // request recalculation of all affected tiles on other zoom levels
+            let start_pos = {lat:startLatLng.lat(), lng:startLatLng.lng()};
+            let end_pos = {lat:endLatlng.lat(), lng:endLatlng.lng()};
+            
+            let data = { start_pos: start_pos, end_pos: end_pos};
+            fetch(API_SERVER_LOCATION + "/erase", {
+                method: "POST",
+                headers: new Headers({ 'content-type': 'application/json' }),
+                body: JSON.stringify(data)
+            }).then(res => {
+                console.log("Request complete! response:", res);
+            });
+
         };
     } else {
         div.hidden = 1; //Hide the div
