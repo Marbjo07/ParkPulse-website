@@ -36,7 +36,7 @@ function loadMapInterface() {
     document.body.appendChild(script);
 }
 
-var SAS_key = "not yet";
+var user_key = "not yet";
 
 async function login() {
     const password = document.getElementById("password").value;
@@ -48,37 +48,38 @@ async function login() {
     };
 
     try {
-        const response = await fetch("http://127.0.0.1:5000/login", {
+        const response = await fetch(API_SERVER_LOCATION + "/login", {
             method: "POST",
-            headers: new Headers({ 'content-type': 'application/json' }),
-            body: JSON.stringify(data)
+            headers: new Headers({ 'content-type': 'application/json'}),
+            body: JSON.stringify(data),
         });
 
         if (response.ok) {
             const json = await response.json();
             if (json.success) {
-                SAS_key = json.key;
-                console.log("Login successful. Key:", SAS_key);
+                user_key = json.key;
+                console.log("Login successful. Key:", user_key);
                 document.getElementById("loginPopup").style.display = "none";
                 loadMapInterface();
+                setTimeout(createToast, 2000, "info", "Welcome!");
+                setTimeout(createToast, 4000, "info", "Information, Warnings, Errors and Success are displayed here.");
+                setTimeout(createToast, 6000, "info", "Use left click to get the address!");
             } else {
                 console.log("Login failed.");
                 // Handle login failure
-                alert("Unexpected Error, contact maintenance")
+                createToast("error", "Login failed");
             }
         }else if (response.status == 401){
-            $('form').addClass('ahashakeheartache');
-            $('form').on('webkitAnimationEnd oanimationend msAnimationEnd animationend', function(e){
-                $('form').delay(200).removeClass('ahashakeheartache');
-            });
+            createToast("error", "Authentication failed")
+            console.log("Authentication failed");
         } else {
             console.error("Server response not ok:", response.status);
-            alert("Unexpected Error, contact maintenance 🧰")
+            createToast("error", "Unexpected Error, contact maintenance");
         }
     } catch (error) {
         console.error("Fetch error:", error);
-        // Handle fetch error
-        alert("Login Server Down or Moved")
+        // Inform user
+        createToast("error", "Internal server error");
     }
 
 }

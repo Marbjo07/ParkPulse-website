@@ -28,6 +28,11 @@ body {
   text-decoration: none;
 }
 
+#current-city {
+  color: white;
+  text-align: center;
+}
+
 .dropdown {
   float: left;
   overflow: hidden;

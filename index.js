@@ -1,10 +1,9 @@
 // Define the initialize function
 var map;
 
-API_SERVER_LOCATION = "http://127.0.0.1:5000"
-
+API_SERVER_LOCATION = "http://parkpulse-api.azurewebsites.net"
 var city_coord_map = {
-    "berlin": [52.520008, 13.404954],
+    "berlin": [52.51752504687608, 13.432100060622572],
     "gothenburg": [57.7162651, 11.9774066],
     "munich": [48.1364898, 11.5825052],
     "stockholm": [59.3297094, 18.0701035],
@@ -16,15 +15,7 @@ function jump(place) {
     console.log(lat, lng)
     current_city_name = place;
     map.panTo(new google.maps.LatLng(lat, lng));
-    let warning = "";
-    if (place == "munich") {
-        warning = "\n------\nwarnings \n    accuracy is currently low";
-    }
-    let info = "";
-    if (place == "stockholm") {
-        info = "\n------\ninfo\n    search not yet completed"
-    }
-    alert("stats\n    coverage: 5%\n    area searched: 500km2" + warning + info);
+    document.getElementById('current-city').innerHTML = `You are in ${place.charAt(0).toUpperCase() + place.slice(1)}!`
 }
 
 function generateDropdownMenu() {
@@ -43,20 +34,6 @@ function generateDropdownMenu() {
     });
 }
 
-function eraseAreaZoomRecursively(x, y, zoom) {
-    if (zoom >= 17)
-        return;
-
-    let tileName;
-    for (let y_offset = 0; y_offset <= 1; y_offset++) {
-        for (let x_offset = 0; x_offset <= 1; x_offset++) {
-            tileName = getTileName(x * 2 + x_offset, y * 2 + y_offset);
-            tileInfo[tileName] = { taken: true };
-            eraseAreaZoomRecursively(x * 2 + x_offset, y * 2 + y_offset, zoom + 1)
-        }
-    }
-}
-
 var tileInfo = {};
 function eraseArea(top, left, bottom, right) {
     console.log(`Erasing from (${top}, ${left}) to (${bottom} ${right})`)
@@ -67,7 +44,6 @@ function eraseArea(top, left, bottom, right) {
         for (let x = Math.min(left, right); x < Math.max(left, right); x++) {
             let tileName = getTileName(x, y);
             tileInfo[tileName] = { taken: true };
-            eraseAreaZoomRecursively(x, y, map.getZoom());
         }
     }
 
@@ -152,29 +128,46 @@ function toggleEraserTool(force, value) {
             reCalc();
             let endLatlng = pixelToLatlng(x1, y1);
 
-            // erase base zoom
-            eraseArea(
-                latToTile(startLatLng.lat(), 17),
-                lngToTile(startLatLng.lng(), 17),
-                latToTile(endLatlng.lat(), 17),
-                lngToTile(endLatlng.lng(), 17));
+            
+            console.log(latToTile(startLatLng.lat(), 17),
+            lngToTile(startLatLng.lng(), 17),
+            latToTile(endLatlng.lat(), 17),
+            lngToTile(endLatlng.lng(), 17))
 
             // request recalculation of all affected tiles on other zoom levels
             let start_pos = {lat:startLatLng.lat(), lng:startLatLng.lng()};
             let end_pos = {lat:endLatlng.lat(), lng:endLatlng.lng()};
             
-            let data = { start_pos: start_pos, end_pos: end_pos};
-            fetch(API_SERVER_LOCATION + "/erase", {
+            let data = { start_pos: start_pos, end_pos: end_pos, key:user_key};
+            const requestOptions = {
                 method: "POST",
-                headers: new Headers({ 'content-type': 'application/json' }),
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
-            }).then(res => {
-                console.log("Request complete! response:", res);
-            });
-
+            };
+            
+            fetch(`${API_SERVER_LOCATION}/erase`, requestOptions)
+                .then(response => {
+                    console.log("Request complete! Response:", response);
+                    createToast('success', `Erased ${Math.round(response.area_erased)} square meters`)
+                    return response;
+                })
+                .then(requestFileInfo)
+                .then(() => {
+                    const startTile = {
+                        x: latToTile(startLatLng.lat(), 17),
+                        y: lngToTile(startLatLng.lng(), 17)
+                    };
+                    const endTile = {
+                        x: latToTile(endLatlng.lat(), 17),
+                        y: lngToTile(endLatlng.lng(), 17)
+                    };
+                    eraseArea(startTile.x, startTile.y, endTile.x, endTile.y);
+                })
+                .catch(error => createToast("error", error));
         };
     } else {
         div.hidden = 1; //Hide the div
+        // disable all added mouse events
         onmousedown = () => { };
         onmousemove = () => { };
         onmouseup = () => { };
@@ -182,31 +175,45 @@ function toggleEraserTool(force, value) {
 }
 
 function getTileName(x, y) {
-    return "img_" + x + "_" + y + ".png";
+    return `img_${x}_${y}.png`;
 }
 
 function isValidTileName(name) {
-    return validTileRequests.includes(name)
+    return validTileRequests.includes(name);
 }
 
 function fetchTileLocation(x, y, zoom) {
     let tileName = getTileName(x, y);
     if (!isValidTileName(tileName)) {
-        return "white.png";
+        return 'white.png';
     }
 
-    let fetchURL = 'https://pulseoverlaystorage.blob.core.windows.net/cities/' + current_city_name + '/' + zoom + '/img_' + x + '_' + y + '.png?raw=True&' + SAS_key;
-    // no extra info exists
-    if (tileInfo[tileName] == null) {
-        return fetchURL;
+    if (tileInfo[tileName] && tileInfo[tileName].taken) {
+        return 'white.png';
     }
-    // if info indicates somethinge else than taken
-    else if (!tileInfo[tileName].taken) {
-        return fetchURL;
-    }
-    // 
-    else {
-    }
+
+    
+    let fetchURL = `${API_SERVER_LOCATION}/img/${zoom}/${tileName}`;
+    return fetchURL;
+}
+
+
+async function requestFileInfo() {
+    validTileRequests = await fetch('https://pulseoverlaystorage.blob.core.windows.net/cities/' + current_city_name + '/valid_requests_' + current_city_name + '.txt?raw=True')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text(); // Get the response as text
+        })
+        .then(data => {
+            return data.trim().split('\n'); // Split text into an array of lines
+        })
+        .catch(error => {
+            createToast('error', 'Network error');
+            console.error('There was a problem fetching the file:', error);
+        });
+    console.log(validTileRequests);
 }
 
 var maptiler;
@@ -228,23 +235,10 @@ async function initialize() {
 
     generateDropdownMenu();
 
-    validTileRequests = await fetch('https://pulseoverlaystorage.blob.core.windows.net/cities/' + current_city_name + '/valid_requests_' + current_city_name + '.txt?raw=True&' + SAS_key)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.text(); // Get the response as text
-        })
-        .then(data => {
-            return data.trim().split('\n'); // Split text into an array of lines
-        })
-        .catch(error => {
-            console.error('There was a problem fetching the file:', error);
-        });
-    console.log(validTileRequests);
+    await requestFileInfo();
 
     maptiler = new google.maps.ImageMapType({
-        getTileUrl: function (coord, zoom) {
+        getTileUrl: function(coord, zoom) {
             return fetchTileLocation(coord.x, coord.y, zoom);
         },
         tileSize: new google.maps.Size(256, 256),
