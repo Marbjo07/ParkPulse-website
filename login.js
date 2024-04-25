@@ -61,9 +61,35 @@ async function login() {
                 console.log("Login successful. Key:", user_key);
                 document.getElementById("loginPopup").style.display = "none";
                 loadMapInterface();
-                setTimeout(createToast, 2000, "info", "Welcome!");
-                setTimeout(createToast, 4000, "info", "Information, Warnings, Errors and Success are displayed here.");
-                setTimeout(createToast, 6000, "info", "Use left click to get the address!");
+
+                const toastMessages = [
+                    "Welcome!",
+                    "Information, Warnings, Errors and Success are displayed here.",
+                    "Use left click to get the address!",
+                    "Red blobs mark parked cars.",
+                    "This was done using AI, so there may be mistakes.",
+                    "However, mistakes will decrease with newer generations.",
+                    "The area searched around Berlin is 800 km^2",
+                    "More cities are coming soon.",
+                    "The Erase tool is used to remove blobs that are \"used\" or the housing association is contacted.",
+                    "Click the 'Erase' button to toggle erase mode.",
+                    "Then select the area you want to erase.",
+                    "Use ctrl as a hotkey for the 'Erase' button.",
+                ];
+                
+                const messageType = "info";
+                
+                let index = 0;
+                
+                const intervalId = setInterval(() => {
+                    if (index < toastMessages.length) {
+                        const message = toastMessages[index];
+                        createToast(messageType, message);
+                        index++;
+                    } else {
+                        clearInterval(intervalId); // Stop the loop once all messages are displayed
+                    }
+                }, 2000);
             } else {
                 console.log("Login failed.");
                 // Handle login failure
