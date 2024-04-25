@@ -38,6 +38,39 @@ function loadMapInterface() {
 
 var user_key = "not yet";
 
+function displayWelcomeMessage() {
+    const toastMessages = [
+        "Welcome!",
+        "Information, Warnings, Errors and Success are displayed here.",
+        "Use left click to get the address!",
+        "Red blobs mark parked cars.",
+        "This was done using AI, so there may be mistakes.",
+        "However, mistakes will decrease with newer generations.",
+        "The area searched around Berlin is 800 km^2",
+        "More cities are coming soon.",
+        "The Erase tool is used to remove blobs that are \"used\" or the housing association is contacted.",
+        "Click the 'Erase' button to toggle erase mode.",
+        "Then select the area you want to erase.",
+        "Use ctrl as a hotkey for the 'Erase' button.",
+        "Click 'Help' to replay this message.",
+    ];
+    
+    const messageType = "info";
+    
+    let index = 1;
+    createToast(messageType, toastMessages[0]);
+    
+    const intervalId = setInterval(() => {
+        if (index < toastMessages.length) {
+            const message = toastMessages[index];
+            createToast(messageType, message);
+            index++;
+        } else {
+            clearInterval(intervalId); // Stop the loop once all messages are displayed
+        }
+    }, 2500);
+}
+
 async function login() {
     const password = document.getElementById("password").value;
     const hashedPassword = await hashPassword(password);
@@ -62,34 +95,7 @@ async function login() {
                 document.getElementById("loginPopup").style.display = "none";
                 loadMapInterface();
 
-                const toastMessages = [
-                    "Welcome!",
-                    "Information, Warnings, Errors and Success are displayed here.",
-                    "Use left click to get the address!",
-                    "Red blobs mark parked cars.",
-                    "This was done using AI, so there may be mistakes.",
-                    "However, mistakes will decrease with newer generations.",
-                    "The area searched around Berlin is 800 km^2",
-                    "More cities are coming soon.",
-                    "The Erase tool is used to remove blobs that are \"used\" or the housing association is contacted.",
-                    "Click the 'Erase' button to toggle erase mode.",
-                    "Then select the area you want to erase.",
-                    "Use ctrl as a hotkey for the 'Erase' button.",
-                ];
-                
-                const messageType = "info";
-                
-                let index = 0;
-                
-                const intervalId = setInterval(() => {
-                    if (index < toastMessages.length) {
-                        const message = toastMessages[index];
-                        createToast(messageType, message);
-                        index++;
-                    } else {
-                        clearInterval(intervalId); // Stop the loop once all messages are displayed
-                    }
-                }, 2000);
+                displayWelcomeMessage();
             } else {
                 console.log("Login failed.");
                 // Handle login failure
