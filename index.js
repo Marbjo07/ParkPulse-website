@@ -1,7 +1,7 @@
 // Define the initialize function
 var map;
 
-API_SERVER_LOCATION = "http://parkpulse-api.azurewebsites.net"
+API_SERVER_LOCATION = "https://parkpulse-api.azurewebsites.net"
 var city_coord_map = {
     "berlin": [52.51752504687608, 13.432100060622572],
     "gothenburg": [57.7162651, 11.9774066],
