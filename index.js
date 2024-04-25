@@ -148,7 +148,7 @@ function toggleEraserTool(force, value) {
             fetch(`${API_SERVER_LOCATION}/erase`, requestOptions)
                 .then(response => {
                     console.log("Request complete! Response:", response);
-                    createToast('success', `Erased ${Math.round(response.area_erased)} square meters`)
+                    createToast('success', `Erased ${Math.round(parseFloat(response.area_erased))} square meters`)
                     return response;
                 })
                 .then(requestFileInfo)
@@ -243,7 +243,7 @@ async function initialize() {
         },
         tileSize: new google.maps.Size(256, 256),
         isPng: true,
-        opacity: 0.7
+        opacity: 0.7,
     });
 
     let [lat, lng] = Object.values(city_coord_map)[0];
