@@ -46,12 +46,13 @@ function displayWelcomeMessage() {
         "Red blobs mark parked cars.",
         "This was done using AI, so there may be mistakes.",
         "However, mistakes will decrease with newer generations.",
-        "The area searched around Berlin is 800 km^2",
-        "More cities are coming soon.",
+        "The search space is limited but often around 800 km per city",
+        "More searched area is coming soon,",
         "The Erase tool is used to remove blobs that are \"used\" or the housing association is contacted.",
         "Click the 'Erase' button to toggle erase mode.",
         "Then select the area you want to erase.",
         "Use ctrl as a hotkey for the 'Erase' button.",
+        "Markers are soon done.",
         "Click 'Help' to replay this message.",
     ];
     
