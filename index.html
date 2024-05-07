@@ -10,6 +10,7 @@
   
   <script src="./notification.js"></script>
   <script src="./index.js"></script>
+
 </head>
 
 <body>
@@ -20,8 +21,7 @@
   <div class="navbar">
     <a href="#stats" onclick="createToast('error', 'coming soon...')">Stats</a>
     <a href="#eraser" onclick="toggleEraserTool()">Eraser</a>
-    <a href="#markers" onclick="toggleMarkers()">Map Markers</a>
-    <div class="dropdown">
+    <div class="dropdown" onclick="createToast('warning', 'Under construction 🚧, however check out zürich!')">
       <button class="dropbtn">Dropdown
         <i class="fa fa-caret-down"></i>
       </button>
@@ -31,7 +31,6 @@
     </div>
     <h1 id="current-city">You are in Berlin!</h1>
     <a href="#help" onclick="displayWelcomeMessage()">Help</a>
-
   </div>
 
   <form id="loginPopup">
@@ -49,7 +48,6 @@
 
   <p style="position: absolute; top: 97.5%; padding-right: 10px; right: 0%; font-size: medium;" >Made by: Marius Bjørhei </p>
   <p style="position: absolute; top: 97.5%; padding-left: 10px; font-size: medium; ">Contact Support: marius.bjorhei@gmail.com</p>
-
 </body>
 
 </html>

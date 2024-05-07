@@ -83,10 +83,9 @@ async function login() {
     try {
         createToast("info", "Login might take up to a minute.");
         document.getElementById("login-button").disabled = true;
-        let headers = new Headers({ 'content-type': 'application/json'});
         const response = await fetch(API_SERVER_LOCATION + "/login", {
             method: "POST",
-            headers: headers,
+            headers: new Headers({ 'content-type': 'application/json'}),
             body: JSON.stringify(data),
         });
         

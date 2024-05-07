@@ -1,13 +1,13 @@
+// Define the initialize function
 var map;
 
-API_SERVER_LOCATION = "http://parkpulse-api.azurewebsites.net"
-//API_SERVER_LOCATION = "http://127.0.0.1:5000"
-
+API_SERVER_LOCATION = "https://parkpulse-api.azurewebsites.net"
 var city_coord_map = {
-    "stockholm": [59.33072276590821, 18.019477350453403], //59.334591, 18.063240
     "berlin": [52.51752504687608, 13.432100060622572],
-    //"gothenburg": [57.7430536834832, 11.947388104548555],
-    //"munich": [48.1364898, 11.5825052],
+    "gothenburg": [57.7162651, 11.9774066],
+    "munich": [48.1364898, 11.5825052],
+    "stockholm": [59.3297094, 18.0701035],
+    "zurich": [47.36667, 8.55],
 }
 
 function jump(place) {
@@ -128,23 +128,23 @@ function toggleEraserTool(force, value) {
             reCalc();
             let endLatlng = pixelToLatlng(x1, y1);
 
-
+            
             console.log(latToTile(startLatLng.lat(), 17),
-                lngToTile(startLatLng.lng(), 17),
-                latToTile(endLatlng.lat(), 17),
-                lngToTile(endLatlng.lng(), 17))
+            lngToTile(startLatLng.lng(), 17),
+            latToTile(endLatlng.lat(), 17),
+            lngToTile(endLatlng.lng(), 17))
 
             // request recalculation of all affected tiles on other zoom levels
-            let start_pos = { lat: startLatLng.lat(), lng: startLatLng.lng() };
-            let end_pos = { lat: endLatlng.lat(), lng: endLatlng.lng() };
-
-            let data = { start_pos: start_pos, end_pos: end_pos, key: user_key };
+            let start_pos = {lat:startLatLng.lat(), lng:startLatLng.lng()};
+            let end_pos = {lat:endLatlng.lat(), lng:endLatlng.lng()};
+            
+            let data = { start_pos: start_pos, end_pos: end_pos, key:user_key};
             const requestOptions = {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             };
-
+            
             fetch(`${API_SERVER_LOCATION}/erase`, requestOptions)
                 .then(response => {
                     console.log("Request complete! Response:", response);
@@ -192,101 +192,34 @@ function fetchTileLocation(x, y, zoom) {
         return 'white.png';
     }
 
-
+    
     let fetchURL = `${API_SERVER_LOCATION}/img/${zoom}/${tileName}`;
     return fetchURL;
-}
-async function fetchAndAddToList(url, list) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.text();
-        list.push(...data.trim().split('\n'));
-    } catch (error) {
-        createToast('error', 'Network error');
-        console.error('There was a problem fetching the file:', error);
-    }
 }
 
 
 async function requestFileInfo() {
-    await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_berlin.txt?raw=True', validTileRequests);
-    await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_stockholm.txt?raw=True', validTileRequests);
-
-    infoPoints = await fetch(`${API_SERVER_LOCATION}/info-points`)
+    validTileRequests = await fetch('https://pulseoverlaystorage.blob.core.windows.net/cities/' + current_city_name + '/valid_requests_' + current_city_name + '.txt?raw=True')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
             return response.text(); // Get the response as text
         })
-        .then(text => {
-            const lines = text.split('\n');
-            const data = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].replace('\r', '').split(',');
-                const obj = {
-                    position: {
-                        lat: parseFloat(values[0]),
-                        lng: parseFloat(values[1])
-                    },
-                    title: `We ${infoTypes[parseInt(values[2])]} here.`,
-                    infoTypeID: values[2],
-                    marker: null,
-                };
-                data.push(obj);
-            }
-            console.log(data);
-            return data;
+        .then(data => {
+            return data.trim().split('\n'); // Split text into an array of lines
         })
         .catch(error => {
             createToast('error', 'Network error');
             console.error('There was a problem fetching the file:', error);
         });
     console.log(validTileRequests);
-
-}
-
-async function getAddressAtPoint(lat, lng) {
-    return await fetch("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + lng + "&key=AIzaSyBq8XtJsQz7gs29JOWKW7Owd946vQfFel4")
-        .then(response => response.json())
-        .then(data => {
-            const address = data.results[0].formatted_address;
-            return address;
-        });
 }
 
 var maptiler;
-let validTileRequests = [];
-var infoPoints;
-const infoTypes = ['won', 'are waiting', 'lost'];
-
-const infoColors = {
-    won: '#37c42d',
-    waiting: '#fbbc04',
-    lost: '#000000'
-};
-
-const infoPointsStyle = {
-    borderColor: '#000000',
-    glyphColor: 'white'
-};
-
-function toggleMarkers() {
-    let setStateEqual = (infoPoints[0].marker.map != null) ? null : map;
-    for (let i = 0; i < infoPoints.length; i++) {
-        infoPoints[i].marker.setMap(setStateEqual);
-    }
-}
-
+let validTileRequests;
 async function initialize() {
-    const { Map, InfoWindow } = await google.maps.importLibrary("maps");
-    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary(
-        "marker",
-    );
+
 
     window.addEventListener("keyup", function (event) {
         if (event.key == "Control") {
@@ -305,65 +238,36 @@ async function initialize() {
     await requestFileInfo();
 
     maptiler = new google.maps.ImageMapType({
-        getTileUrl: function (coord, zoom) {
+        getTileUrl: function(coord, zoom) {
             return fetchTileLocation(coord.x, coord.y, zoom);
         },
         tileSize: new google.maps.Size(256, 256),
         isPng: true,
-        opacity: 1,
+        opacity: 0.7,
     });
 
     let [lat, lng] = Object.values(city_coord_map)[0];
     map = new google.maps.Map(document.getElementById("map"), {
         center: new google.maps.LatLng(lat, lng),
-        zoom: 15,
+        zoom: 17,
         mapTypeId: 'satellite',
-        maxZoom: 19,
+        maxZoom: 18,
         minZoom: 6,
         rotateControl: false,
-        tilt: 0,
-        mapId: "47e0b8f09b84f863"
+        tilt: 0
     });
 
     map.overlayMapTypes.insertAt(0, maptiler);
 
     google.maps.event.addListener(map, "rightclick", function (event) {
-        let lat = event.latLng.lat();
-        let lng = event.latLng.lng();
-        getAddressAtPoint(lat, lng)
-        .then((address) => {
-            alert(address);
-        });
-    });
-    // Create an info window to share between markers.
-    const infoWindow = new InfoWindow();
-
-    // Create the markers.
-    infoPoints.forEach(({ position, title, infoTypeID,  }, i) => {
-        const pin = new PinElement({
-            background: Object.values(infoColors)[infoTypeID],
-            borderColor: infoPointsStyle.borderColor,
-            glyphColor: infoPointsStyle.glyphColor,
-        });
-        console.log(position);
-        const marker = new AdvancedMarkerElement({
-            position,
-            map,
-            title: `${title}`,
-            content: pin.element,
-        });
-
-        // Add a click listener for each marker, and set up the info window.
-        marker.addListener('click', ({ domEvent, latLng }) => {
-            const { target } = domEvent;
-
-            infoWindow.close();
-            infoWindow.setContent(marker.title);
-            infoWindow.open(marker.map, marker);
-            map.panTo(latLng);
-        });
-
-        infoPoints[i].marker = marker;
+        var lat = event.latLng.lat();
+        var lng = event.latLng.lng();
+        fetch("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + lng + "&key=AIzaSyBq8XtJsQz7gs29JOWKW7Owd946vQfFel4")
+            .then(response => response.json())
+            .then(data => {
+                const address = data.results[0].formatted_address;
+                alert(address);
+            })
     });
 }
 
