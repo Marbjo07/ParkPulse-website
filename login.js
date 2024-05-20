@@ -40,19 +40,16 @@ var user_key = "not yet";
 
 function displayWelcomeMessage() {
     const toastMessages = [
-        "Welcome!",
+        "Welcome to beta testing!",
         "Information, Warnings, Errors and Success are displayed here.",
         "Use left click to get the address!",
         "Red blobs mark parked cars.",
         "This was done using AI, so there may be mistakes.",
-        "However, mistakes will decrease with newer generations.",
-        "The search space is limited but often around 800 km per city",
-        "More searched area is coming soon,",
+        "The search space is currently limited.",
         "The Erase tool is used to remove blobs that are \"used\" or the housing association is contacted.",
-        "Click the 'Erase' button to toggle erase mode.",
-        "Then select the area you want to erase.",
         "Use ctrl as a hotkey for the 'Erase' button.",
-        "Markers are soon done.",
+        "Markers display current wins.",
+        "More functionality coming soon.",
         "Click 'Help' to replay this message.",
     ];
     
@@ -69,7 +66,7 @@ function displayWelcomeMessage() {
         } else {
             clearInterval(intervalId); // Stop the loop once all messages are displayed
         }
-    }, 2500);
+    }, 3000);
 }
 
 async function login() {

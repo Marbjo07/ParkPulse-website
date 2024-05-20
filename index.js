@@ -185,12 +185,10 @@ function isValidTileName(name) {
 function fetchTileLocation(x, y, zoom) {
     let tileName = getTileName(x, y);
     if (!isValidTileName(tileName)) {
-        console.log("1");
         return 'white.png';
     }
 
     if (tileInfo[tileName] && tileInfo[tileName].taken) {
-        console.log("1");
         return 'white.png';
     }
 
@@ -216,39 +214,63 @@ async function fetchAndAddToList(url, list) {
 async function requestFileInfo() {
     await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_berlin.txt?raw=True', validTileRequests);
     await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_stockholm.txt?raw=True', validTileRequests);
+    
+    let data = { key: user_key };
+    const requestOptions = {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    };
 
-    infoPoints = await fetch(`${API_SERVER_LOCATION}/info-points`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.text(); // Get the response as text
-        })
-        .then(text => {
-            const lines = text.split('\n');
-            const data = [];
+    infoPoints = await fetch(`${API_SERVER_LOCATION}/info-points`, requestOptions)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.text(); // Get the response as text
+    })
+    .then(text => {
+        const lines = text.split('\n');
+        const data = [];
 
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].replace('\r', '').split(',');
-                const obj = {
-                    position: {
-                        lat: parseFloat(values[0]),
-                        lng: parseFloat(values[1])
-                    },
-                    title: `We ${infoTypes[parseInt(values[2])]} here.`,
-                    infoTypeID: values[2],
-                    marker: null,
-                };
-                data.push(obj);
-            }
-            console.log(data);
-            return data;
-        })
-        .catch(error => {
-            createToast('error', 'Network error');
-            console.error('There was a problem fetching the file:', error);
-        });
-    console.log(validTileRequests);
+        for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim() === '') continue; // Skip empty lines
+
+            const values = lines[i].replace('\r', '').split(';');
+            
+            if (values.length != 10) continue;
+            
+            if (values[9] == '') continue;
+
+            // Parse the lat/lng JSON string
+            let latLngString = values[9].replaceAll("'", '"')
+            const latLng = JSON.parse(latLngString); // Parse the lat/lng JSON string
+
+            const obj = {
+                position: {
+                    lat: parseFloat(latLng.lat),
+                    lng: parseFloat(latLng.lng)
+                },
+                recordId: values[1],
+                title: values[2], // Assuming the title comes from the third field
+                infoTypeID: 0, // Adjust this according to the correct field for infoTypeID
+                city: values[3], // City    
+                address: values[4], // Address
+                country: values[6], // Country
+                contact: values[7], // Contact name
+                street: values[8], // Street
+                marker: null,
+            };
+            data.push(obj);
+        }
+        return data;
+    })
+    .catch(error => {
+        createToast('error', 'Network error');
+        console.error('There was a problem fetching the file:', error);
+    });
+console.log(validTileRequests);
+
 
 }
 
@@ -282,6 +304,10 @@ function toggleMarkers() {
     for (let i = 0; i < infoPoints.length; i++) {
         infoPoints[i].marker.setMap(setStateEqual);
     }
+}
+
+function generateInfoWindowHTML(infoPoint) {
+    return `<h4>${infoPoint.title.replace("Bostadsrättsförening", "BRF")}</h4></br><p>Owner: ${infoPoint.contact} </br>Address: ${infoPoint.address}</br>Region: ${infoPoint.city}</br>Record ID: ${infoPoint.recordId}</p>`
 }
 
 async function initialize() {
@@ -341,13 +367,15 @@ async function initialize() {
     const infoWindow = new InfoWindow();
 
     // Create the markers.
-    infoPoints.forEach(({ position, title, infoTypeID,  }, i) => {
+    infoPoints.forEach((infoPoint, i) => {
         const pin = new PinElement({
-            background: Object.values(infoColors)[infoTypeID],
+            background: Object.values(infoColors)[infoPoint.infoTypeID],
             borderColor: infoPointsStyle.borderColor,
             glyphColor: infoPointsStyle.glyphColor,
         });
-        console.log(position);
+
+        let title = infoPoint.title;
+        let position = infoPoint.position;
         const marker = new AdvancedMarkerElement({
             position,
             map,
@@ -360,7 +388,7 @@ async function initialize() {
             const { target } = domEvent;
 
             infoWindow.close();
-            infoWindow.setContent(marker.title);
+            infoWindow.setContent(generateInfoWindowHTML(infoPoint));
             infoWindow.open(marker.map, marker);
             map.panTo(latLng);
         });
