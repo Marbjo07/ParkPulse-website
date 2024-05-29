@@ -79,8 +79,9 @@ async function login() {
     };
 
     try {
-        createToast("info", "Login might take up to a minute.");
+        createToast("info", "Login might take some time.");
         document.getElementById("login-button").disabled = true;
+        enableLoadingAnimation();
         const response = await fetch(API_SERVER_LOCATION + "/login", {
             method: "POST",
             headers: new Headers({ 'content-type': 'application/json'}),
@@ -113,6 +114,7 @@ async function login() {
         // Inform user
         createToast("error", "Internal server error");
     }
+    disableLoadingAnimation();
     document.getElementById("login-button").disabled = false;
 
 }

@@ -182,7 +182,17 @@ function isValidTileName(name) {
     return validTileRequests.includes(name);
 }
 
-function fetchTileLocation(x, y, zoom) {
+function enableLoadingAnimation() {
+    document.getElementById('spinner').style.visibility = "visible";
+}
+
+function disableLoadingAnimation() {
+    document.getElementById('spinner').style.visibility = "hidden";
+}
+
+function getTileLocation(x, y, zoom) {
+    enableLoadingAnimation();
+
     let tileName = getTileName(x, y);
     if (!isValidTileName(tileName)) {
         return 'white.png';
@@ -191,7 +201,6 @@ function fetchTileLocation(x, y, zoom) {
     if (tileInfo[tileName] && tileInfo[tileName].taken) {
         return 'white.png';
     }
-
 
     let fetchURL = `${API_SERVER_LOCATION}/img/${zoom}/${tileName}`;
     return fetchURL;
@@ -269,9 +278,7 @@ async function requestFileInfo() {
         createToast('error', 'Network error');
         console.error('There was a problem fetching the file:', error);
     });
-console.log(validTileRequests);
-
-
+    console.log(validTileRequests);
 }
 
 async function getAddressAtPoint(lat, lng) {
@@ -334,12 +341,14 @@ async function initialize() {
 
     maptiler = new google.maps.ImageMapType({
         getTileUrl: function (coord, zoom) {
-            return fetchTileLocation(coord.x, coord.y, zoom);
+            return getTileLocation(coord.x, coord.y, zoom);
         },
         tileSize: new google.maps.Size(256, 256),
         isPng: true,
         opacity: 1,
     });
+    
+    maptiler.addListener("tilesloaded", disableLoadingAnimation);
 
     let [lat, lng] = Object.values(city_coord_map)[0];
     map = new google.maps.Map(document.getElementById("map"), {
