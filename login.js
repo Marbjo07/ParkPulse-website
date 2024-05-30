@@ -42,14 +42,24 @@ function displayWelcomeMessage() {
     const toastMessages = [
         "Welcome to beta testing!",
         "Information, Warnings, Errors and Success are displayed here.",
-        "Use left click to get the address!",
         "Red blobs mark parked cars.",
-        "This was done using AI, so there may be mistakes.",
         "The search space is currently limited.",
-        "The Erase tool is used to remove blobs that are \"used\" or the housing association is contacted.",
-        "Use ctrl as a hotkey for the 'Erase' button.",
+        null,
         "Markers display current wins.",
+        null,
+        null,
+        "Hold ctrl and drag with the cursor to organize a new work area.",
+        null,
+        null,
+        null,
+        "Yellow = to be searched, Green = done. Click to toggle",
+        null,
+        null,
+        "Left click to get the adress",
+        null,
         "More functionality coming soon.",
+        "Work areas are not stored yet.",
+        null,
         "Click 'Help' to replay this message.",
     ];
     
@@ -61,12 +71,14 @@ function displayWelcomeMessage() {
     const intervalId = setInterval(() => {
         if (index < toastMessages.length) {
             const message = toastMessages[index];
-            createToast(messageType, message);
+            if (message) {
+                createToast(messageType, message);
+            }
             index++;
         } else {
             clearInterval(intervalId); // Stop the loop once all messages are displayed
         }
-    }, 3000);
+    }, 3500);
 }
 
 async function login() {

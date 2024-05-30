@@ -64,6 +64,7 @@ function eraseArea(top, left, bottom, right) {
     map.overlayMapTypes.push(maptiler);
 }
 
+
 let current_city_name = Object.keys(city_coord_map)[0];
 
 // magic from stackoverflow
@@ -82,24 +83,22 @@ function pixelToLatlng(xcoor, ycoor) {
 function lngToTile(lon, zoom) { return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom))); }
 function latToTile(lat, zoom) { return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom))); }
 
-
-var eraserOn = false;
-function toggleEraserTool(force, value) {
+var areaSelectionOn = false;
+function toggleAreaSelectionTool(force, value) {
 
     if (force) {
-        eraserOn = value;
+        areaSelectionOn = value;
         console.debug("Settng eraser to " + (value ? "on" : "off"));
     } else {
-        eraserOn = !eraserOn;
+        areaSelectionOn = !areaSelectionOn;
     }
-    console.debug("Eraser is now " + (eraserOn ? "on" : "off"));
-    map.setOptions({ draggable: !eraserOn });
+    console.debug("Eraser is now " + (areaSelectionOn ? "on" : "off"));
+    map.setOptions({ draggable: !areaSelectionOn });
 
 
     var div = document.getElementById('mouseSelectionArea'), x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-    var startLatLng;
-    if (eraserOn) {
-        function reCalc() { //This will restyle the div
+    if (areaSelectionOn) {
+        function updateSquareDiv() { //This will restyle the div
             var x3 = Math.min(x1, x2); //Smaller X
             var x4 = Math.max(x1, x2); //Larger X
             var y3 = Math.min(y1, y2); //Smaller Y
@@ -111,66 +110,48 @@ function toggleEraserTool(force, value) {
         }
         onmousedown = function (e) {
             div.hidden = 0; //Unhide the div
-            x1 = e.clientX; //Set the initial X
-            y1 = e.clientY; //Set the initial Y
-            reCalc();
-            startLatLng = pixelToLatlng(x1, y1);
+
+            x1 = e.clientX;
+            y1 = e.clientY; 
+
+            updateSquareDiv();
         };
         onmousemove = function (e) {
             x2 = e.clientX; //Update the current position X
             y2 = e.clientY; //Update the current position Y
-            reCalc();
+            updateSquareDiv();
         };
         onmouseup = function (e) {
             div.hidden = 1; //Hide the div
-            x1 = e.clientX; //Set the initial X
-            y1 = e.clientY; //Set the initial Y
-            reCalc();
-            let endLatlng = pixelToLatlng(x1, y1);
+            updateSquareDiv();
 
+            // adjust the x, y coords to be relative to the clicked div, e.g the map
+            let clickDivBoundingBox = e.target.getBoundingClientRect();
+            let startLatLng = pixelToLatlng(x1 - clickDivBoundingBox.left, y1 - clickDivBoundingBox.top);
+            let endLatlng = pixelToLatlng(x2 - clickDivBoundingBox.left, y2 - clickDivBoundingBox.top);
 
-            console.log(latToTile(startLatLng.lat(), 17),
-                lngToTile(startLatLng.lng(), 17),
-                latToTile(endLatlng.lat(), 17),
-                lngToTile(endLatlng.lng(), 17))
+            biggestLat = Math.max(startLatLng.lat(), endLatlng.lat());
+            smallestLat = Math.min(startLatLng.lat(), endLatlng.lat());
 
-            // request recalculation of all affected tiles on other zoom levels
-            let start_pos = { lat: startLatLng.lat(), lng: startLatLng.lng() };
-            let end_pos = { lat: endLatlng.lat(), lng: endLatlng.lng() };
+            biggestLng = Math.max(startLatLng.lng(), endLatlng.lng());
+            smallestLng = Math.min(startLatLng.lng(), endLatlng.lng());
 
-            let data = { start_pos: start_pos, end_pos: end_pos, key: user_key };
-            const requestOptions = {
-                method: "POST",
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            };
+            let start_pos = { lat: smallestLat, lng: smallestLng };
+            let end_pos = { lat: biggestLat, lng: biggestLng };
+            
+            console.log(start_pos, end_pos);
+            
+            let creatorName = prompt("Enter your name:");
+            toggleAreaSelectionTool(true, false); // the prompt may interrupt keyboard events so ctrl key up is not registered
 
-            fetch(`${API_SERVER_LOCATION}/erase`, requestOptions)
-                .then(response => {
-                    console.log("Request complete! Response:", response);
-                    createToast('success', `Erased ${Math.round(parseFloat(response.area_erased))} square meters`)
-                    return response;
-                })
-                .then(requestFileInfo)
-                .then(() => {
-                    const startTile = {
-                        x: latToTile(startLatLng.lat(), 17),
-                        y: lngToTile(startLatLng.lng(), 17)
-                    };
-                    const endTile = {
-                        x: latToTile(endLatlng.lat(), 17),
-                        y: lngToTile(endLatlng.lng(), 17)
-                    };
-                    eraseArea(startTile.x, startTile.y, endTile.x, endTile.y);
-                })
-                .catch(error => createToast("error", error));
+            createSquareGridOverlay(start_pos, end_pos, creatorName);
         };
     } else {
         div.hidden = 1; //Hide the div
         // disable all added mouse events
         onmousedown = () => { };
         onmousemove = () => { };
-        onmouseup = () => { };
+        onmouseup = () => { }; 
     }
 }
 
@@ -205,6 +186,7 @@ function getTileLocation(x, y, zoom) {
     let fetchURL = `${API_SERVER_LOCATION}/img/${zoom}/${tileName}`;
     return fetchURL;
 }
+
 async function fetchAndAddToList(url, list) {
     try {
         const response = await fetch(url);
@@ -218,7 +200,6 @@ async function fetchAndAddToList(url, list) {
         console.error('There was a problem fetching the file:', error);
     }
 }
-
 
 async function requestFileInfo() {
     await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_berlin.txt?raw=True', validTileRequests);
@@ -317,28 +298,20 @@ function generateInfoWindowHTML(infoPoint) {
     return `<h4>${infoPoint.title.replace("Bostadsrättsförening", "BRF")}</h4></br><p>Owner: ${infoPoint.contact} </br>Address: ${infoPoint.address}</br>Region: ${infoPoint.city}</br>Record ID: ${infoPoint.recordId}</p>`
 }
 
-async function initialize() {
-    const { Map, InfoWindow } = await google.maps.importLibrary("maps");
-    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary(
-        "marker",
-    );
-
+function addKeyEvents() {
     window.addEventListener("keyup", function (event) {
         if (event.key == "Control") {
-            toggleEraserTool(true, false);
+            toggleAreaSelectionTool(true, false);
         }
     }, false);
     window.addEventListener("keydown", function (event) {
         if (event.ctrlKey && !event.repeat) {
-            toggleEraserTool(true, true);
+            toggleAreaSelectionTool(true, true);
         }
     }, false);
+}
 
-
-    generateDropdownMenu();
-
-    await requestFileInfo();
-
+function addMapOverlayTiler() {
     maptiler = new google.maps.ImageMapType({
         getTileUrl: function (coord, zoom) {
             return getTileLocation(coord.x, coord.y, zoom);
@@ -363,8 +336,10 @@ async function initialize() {
     });
 
     map.overlayMapTypes.insertAt(0, maptiler);
+}
 
-    google.maps.event.addListener(map, "rightclick", function (event) {
+function addDefaultMouseEvents(element) {
+    google.maps.event.addListener(element, "rightclick", function (event) {
         let lat = event.latLng.lat();
         let lng = event.latLng.lng();
         getAddressAtPoint(lat, lng)
@@ -372,9 +347,11 @@ async function initialize() {
             alert(address);
         });
     });
+}
+
+function addInfoMarkers(InfoWindow, AdvancedMarkerElement, PinElement) {
     // Create an info window to share between markers.
     const infoWindow = new InfoWindow();
-
     // Create the markers.
     infoPoints.forEach((infoPoint, i) => {
         const pin = new PinElement({
@@ -394,8 +371,6 @@ async function initialize() {
 
         // Add a click listener for each marker, and set up the info window.
         marker.addListener('click', ({ domEvent, latLng }) => {
-            const { target } = domEvent;
-
             infoWindow.close();
             infoWindow.setContent(generateInfoWindowHTML(infoPoint));
             infoWindow.open(marker.map, marker);
@@ -404,4 +379,125 @@ async function initialize() {
 
         infoPoints[i].marker = marker;
     });
+}
+
+
+polygonColors = ["#CCCC11", "#11EE11"];
+let polygons = [];
+let polygonsOn = true;
+function addPolygonOverlay(coordinates, creatorName) {
+
+    for (let i = 0; i < polygons.length; i++) {
+        const coords = polygons[i].getPath().getArray().map(coord => {
+            return {
+              lat: coord.lat(),
+              lng: coord.lng()
+            }
+          });
+        if (Math.abs(coords[0].lat - coordinates[0].lat) < 0.00001 && Math.abs(coords[0].lng - coordinates[0].lng) < 0.00001) {
+            return;
+        }
+    }
+
+    const polygon = new google.maps.Polygon({
+        paths: coordinates,
+        strokeColor: "#000000",
+        strokeOpacity: 0.3,
+        strokeWeight: 0,
+        fillColor: polygonColors[0],
+        fillOpacity: 0.4,
+        creatorName: creatorName,
+    });
+
+    addDefaultMouseEvents(polygon);
+
+    google.maps.event.addListener(polygon, 'click', function (event) {
+        let currentIndex = polygonColors.indexOf(polygon.fillColor);
+        let nextIndex = (currentIndex + 1) % polygonColors.length;
+        polygon.setOptions({fillColor:  polygonColors[nextIndex]});
+
+    });
+    
+    google.maps.event.addListener(polygon, 'mouseover', function (event) {
+        infoBoxAtCursor = document.getElementById("infoBoxAtCursor");
+        infoBoxAtCursor.innerHTML = `<p>Work area made by ${polygon.creatorName}</p>`;
+        
+        infoBoxAtCursor.style.left = event.domEvent.clientX + 'px';
+        infoBoxAtCursor.style.top = event.domEvent.clientY + 'px';
+
+        infoBoxAtCursor.style.visibility = "visible";
+    });
+    
+    polygon.setMap(map);
+    polygons.push(polygon);
+}
+
+function addSquareOverlay(topRight, bottomLeft, creatorName) {
+    addPolygonOverlay([
+        {lat:topRight.lat, lng:bottomLeft.lng},
+        topRight,
+        {lat:bottomLeft.lat, lng:topRight.lng},
+        bottomLeft,
+    ], creatorName);
+}
+
+
+function createSquareGridOverlay(topRight, bottomLeft, creatorName) {
+
+    const lngIncrement = 0.01;
+    const latIncrement = lngIncrement/2;
+
+    console.log(topRight, bottomLeft, creatorName);
+
+    
+    let startLat = Math.round(topRight.lat * (1 / latIncrement)) / (1 / latIncrement);
+    let startLng = Math.round(topRight.lng * (1 / lngIncrement)) / (1 / lngIncrement);
+
+    for (let lat = startLat; lat + latIncrement < bottomLeft.lat; lat += latIncrement) {
+        for (let lng = startLng; lng + lngIncrement < bottomLeft.lng; lng += lngIncrement) {
+            let topLeft = { lat: lat, lng: lng };
+            let bottomRight = { lat: Math.min(lat + latIncrement, bottomLeft.lat), lng: Math.min(lng + lngIncrement, bottomLeft.lng) };
+
+            // Define a rectangle and set its editable property to true.
+            addSquareOverlay(topLeft, bottomRight, creatorName);
+        }
+    }
+}
+
+function toggleAllPolygons() {
+    polygonsOn = !polygonsOn;
+    for (let i = 0; i < polygons.length; i++) {
+        if (polygonsOn) {
+            polygons[i].setMap(map);
+        }
+        else {
+            polygons[i].setMap(null);
+        }
+    }
+}
+
+async function initialize() {
+    const { Map, InfoWindow } = await google.maps.importLibrary("maps");
+    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary(
+        "marker",
+    );
+
+    addKeyEvents();
+
+    generateDropdownMenu();
+
+    await requestFileInfo();
+
+    await addMapOverlayTiler();
+
+    addDefaultMouseEvents(map);
+
+    addInfoMarkers(InfoWindow, AdvancedMarkerElement, PinElement);
+
+    map.addListener("center_changed", () => {
+        if (!document.getElementById("infoBoxAtCursor").matches(':hover')) {
+            document.getElementById("infoBoxAtCursor").style.visibility = "hidden";
+        }
+    })
+
 }

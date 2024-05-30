@@ -18,9 +18,10 @@
   <script src="./login.js"></script> <!-- Make sure this line is before the form -->
 
   <div class="navbar">
-    <a href="#stats" onclick="createToast('error', 'coming soon...')">Stats</a>
-    <a href="#eraser" onclick="toggleEraserTool()">Eraser</a>
-    <a href="#markers" onclick="toggleMarkers()">Map Markers</a>
+    <a onclick="createToast('error', 'coming soon...')">Stats</a>
+    <a id="selectionToolToggle" onmousedown="toggleAreaSelectionTool(false)">Selection Tool</a>
+    <a onclick="toggleMarkers()">Map Markers</a>
+    <a onclick="toggleAllPolygons()">Work Areas</a>
     <div class="dropdown">
       <button class="dropbtn">Cities
         <i class="fa fa-caret-down"></i>
@@ -30,7 +31,7 @@
       </div>
     </div>
     <h1 id="current-city"></h1>
-    <a href="#help" onclick="displayWelcomeMessage()">Help</a>
+    <a onclick="displayWelcomeMessage()">Help</a>
 
   </div>
 
@@ -42,6 +43,8 @@
     <input type="password" id="password"><br><br>
     <button type="button" id="login-button" onclick="login()">Login</button> <!-- Specify type="button" to prevent form submission -->
   </form>
+
+  <div id="infoBoxAtCursor"></div>
 
   <ul class="notifications">
     <!-- li toast -->
