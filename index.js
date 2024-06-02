@@ -34,56 +34,104 @@ function generateDropdownMenu() {
     });
 }
 
-var tileInfo = {};
-function eraseArea(top, left, bottom, right) {
-    console.log(`Erasing from (${top}, ${left}) to (${bottom} ${right})`)
-
-    let numTakenTiles = Object.keys(tileInfo).length;
-    // erase tiles at current zoom level and inwards
-    for (let y = Math.min(top, bottom); y < Math.max(top, bottom); y++) {
-        for (let x = Math.min(left, right); x < Math.max(left, right); x++) {
-            let tileName = getTileName(x, y);
-            tileInfo[tileName] = { taken: true };
-        }
-    }
-
-    // delete irrelevant tiles
-    console.time("filter tileInfo");
-    for (const key in tileInfo) {
-        if (!isValidTileName(key)) {
-            delete tileInfo[key];
-        }
-    }
-    console.timeEnd("filter tileInfo");
-
-
-    console.log(`Erased ${Object.keys(tileInfo).length - numTakenTiles} tiles`);
-
-    // refresh
-    map.overlayMapTypes.removeAt(0);
-    map.overlayMapTypes.push(maptiler);
-}
-
-
 let current_city_name = Object.keys(city_coord_map)[0];
 
-// magic from stackoverflow
-function pixelToLatlng(xcoor, ycoor) {
-    var ne = map.getBounds().getNorthEast();
-    var sw = map.getBounds().getSouthWest();
-    var projection = map.getProjection();
-    var topRight = projection.fromLatLngToPoint(ne);
-    var bottomLeft = projection.fromLatLngToPoint(sw);
-    var scale = 1 << map.getZoom();
-    var newLatlng = projection.fromPointToLatLng(new google.maps.Point(xcoor / scale + bottomLeft.x, ycoor / scale + topRight.y));
-    return newLatlng;
-};
-
-// https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-function lngToTile(lon, zoom) { return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom))); }
-function latToTile(lat, zoom) { return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom))); }
-
 var areaSelectionOn = false;
+var drawingManager;
+
+function initPolygonDrawingManager() {
+    drawingManager = new google.maps.drawing.DrawingManager({
+        drawingControl: false,
+        polygonOptions: {
+            editable: true
+        }
+    });
+
+    google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
+        polygon.setMap(null);
+    });
+}
+
+function formatDate(date) {
+    let datePart = [
+        date.getDate(),
+        date.toLocaleString('default', { month: 'long' }),
+      date.getFullYear()
+    ].map((n, i) => n.toString().padStart(i === 2 ? 4 : 2, "0")).join("/");
+    let timePart = [
+      date.getHours(),
+      date.getMinutes(),
+      date.getSeconds()
+    ].map((n, i) => n.toString().padStart(2, "0")).join(":");
+    return datePart + " " + timePart;
+  }
+
+function getDate() {
+    return formatDate(new Date());
+}
+
+function pushAllPolygonsToServer() {
+     // push polygon to server
+     let data = { key: user_key, polygon_keys: Array.from(polygonCoords.keys()), polygon_values: Array.from(polygonCoords.values()) };
+     const requestOptions = {
+         method: "POST",
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(data)
+     };
+ 
+     fetch(`${API_SERVER_LOCATION}/push-polygons`, requestOptions)
+     .catch(() => {
+         createToast("error", "faild to sync with server");
+     });
+}
+
+function updatePolygonToServer(id) {
+    let data = { key: user_key, polygon_key: id, polygon_value: polygonCoords.get(id) };
+     const requestOptions = {
+         method: "POST",
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(data)
+     };
+ 
+     fetch(`${API_SERVER_LOCATION}/update-polygon`, requestOptions)
+     .catch(() => {
+         createToast("error", "faild to update work space with server");
+     });
+}
+
+// handles the rest of polygon creation. talking with server, ownership and etc
+function completedPolygonHandler(polygon) {
+    var intersects = findSelfIntersects(polygon.getPath());
+    if (intersects && intersects.length) {
+        createToast("error", "Selection can not intersect itself.");
+        return;
+    }
+
+    let creatorName = prompt("Enter your name:");
+    if (creatorName == null) {
+        return;
+    }
+
+    let id = uniqueId();
+    polygonCoords.set(
+        id,
+        {
+            polygon: polygon.getPath().getArray(),
+            creatorName: creatorName,
+            fillColor: polygonColors[0],
+            creationDate: getDate()
+        }
+    )
+
+    displayPolygonOverlay(id)
+
+    pushAllPolygonsToServer();
+
+    toggleAreaSelectionTool(true, false);// disable area selection
+    // remove the intermediate polygon
+    polygon.setMap(null);
+}
+
 function toggleAreaSelectionTool(force, value) {
 
     if (force) {
@@ -95,63 +143,15 @@ function toggleAreaSelectionTool(force, value) {
     console.debug("Eraser is now " + (areaSelectionOn ? "on" : "off"));
     map.setOptions({ draggable: !areaSelectionOn });
 
-
-    var div = document.getElementById('mouseSelectionArea'), x1 = 0, y1 = 0, x2 = 0, y2 = 0;
     if (areaSelectionOn) {
-        function updateSquareDiv() { //This will restyle the div
-            var x3 = Math.min(x1, x2); //Smaller X
-            var x4 = Math.max(x1, x2); //Larger X
-            var y3 = Math.min(y1, y2); //Smaller Y
-            var y4 = Math.max(y1, y2); //Larger Y
-            div.style.left = x3 + 'px';
-            div.style.top = y3 + 'px';
-            div.style.width = x4 - x3 + 'px';
-            div.style.height = y4 - y3 + 'px';
-        }
-        onmousedown = function (e) {
-            div.hidden = 0; //Unhide the div
-
-            x1 = e.clientX;
-            y1 = e.clientY; 
-
-            updateSquareDiv();
-        };
-        onmousemove = function (e) {
-            x2 = e.clientX; //Update the current position X
-            y2 = e.clientY; //Update the current position Y
-            updateSquareDiv();
-        };
-        onmouseup = function (e) {
-            div.hidden = 1; //Hide the div
-            updateSquareDiv();
-
-            // adjust the x, y coords to be relative to the clicked div, e.g the map
-            let clickDivBoundingBox = e.target.getBoundingClientRect();
-            let startLatLng = pixelToLatlng(x1 - clickDivBoundingBox.left, y1 - clickDivBoundingBox.top);
-            let endLatlng = pixelToLatlng(x2 - clickDivBoundingBox.left, y2 - clickDivBoundingBox.top);
-
-            biggestLat = Math.max(startLatLng.lat(), endLatlng.lat());
-            smallestLat = Math.min(startLatLng.lat(), endLatlng.lat());
-
-            biggestLng = Math.max(startLatLng.lng(), endLatlng.lng());
-            smallestLng = Math.min(startLatLng.lng(), endLatlng.lng());
-
-            let start_pos = { lat: smallestLat, lng: smallestLng };
-            let end_pos = { lat: biggestLat, lng: biggestLng };
-            
-            console.log(start_pos, end_pos);
-            
-            let creatorName = prompt("Enter your name:");
-            toggleAreaSelectionTool(true, false); // the prompt may interrupt keyboard events so ctrl key up is not registered
-
-            createSquareGridOverlay(start_pos, end_pos, creatorName);
-        };
-    } else {
-        div.hidden = 1; //Hide the div
-        // disable all added mouse events
-        onmousedown = () => { };
-        onmousemove = () => { };
-        onmouseup = () => { }; 
+        drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+        drawingManager.setMap(map);
+        google.maps.event.addListener(drawingManager, 'polygoncomplete', completedPolygonHandler);
+    }
+    else {
+        drawingManager.setDrawingMode(null);
+        drawingManager.setMap(null);
+        google.maps.event.clearListeners(drawingManager, 'polygoncomplete');   
     }
 }
 
@@ -179,10 +179,6 @@ function getTileLocation(x, y, zoom) {
         return 'white.png';
     }
 
-    if (tileInfo[tileName] && tileInfo[tileName].taken) {
-        return 'white.png';
-    }
-
     let fetchURL = `${API_SERVER_LOCATION}/img/${zoom}/${tileName}`;
     return fetchURL;
 }
@@ -201,10 +197,7 @@ async function fetchAndAddToList(url, list) {
     }
 }
 
-async function requestFileInfo() {
-    await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_berlin.txt?raw=True', validTileRequests);
-    await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_stockholm.txt?raw=True', validTileRequests);
-    
+async function requestInfoPoints() {
     let data = { key: user_key };
     const requestOptions = {
         method: "POST",
@@ -213,53 +206,57 @@ async function requestFileInfo() {
     };
 
     infoPoints = await fetch(`${API_SERVER_LOCATION}/info-points`, requestOptions)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.text(); // Get the response as text
-    })
-    .then(text => {
-        const lines = text.split('\n');
-        const data = [];
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text(); // Get the response as text
+        })
+        .then(text => {
+            const lines = text.split('\n');
+            const data = [];
 
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].trim() === '') continue; // Skip empty lines
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue; // Skip empty lines
 
-            const values = lines[i].replace('\r', '').split(';');
-            
-            if (values.length != 10) continue;
-            
-            if (values[9] == '') continue;
+                const values = lines[i].replace('\r', '').split(';');
 
-            // Parse the lat/lng JSON string
-            let latLngString = values[9].replaceAll("'", '"')
-            const latLng = JSON.parse(latLngString); // Parse the lat/lng JSON string
+                if (values.length != 10) continue;
 
-            const obj = {
-                position: {
-                    lat: parseFloat(latLng.lat),
-                    lng: parseFloat(latLng.lng)
-                },
-                recordId: values[1],
-                title: values[2], // Assuming the title comes from the third field
-                infoTypeID: 0, // Adjust this according to the correct field for infoTypeID
-                city: values[3], // City    
-                address: values[4], // Address
-                country: values[6], // Country
-                contact: values[7], // Contact name
-                street: values[8], // Street
-                marker: null,
-            };
-            data.push(obj);
-        }
-        return data;
-    })
-    .catch(error => {
-        createToast('error', 'Network error');
-        console.error('There was a problem fetching the file:', error);
-    });
-    console.log(validTileRequests);
+                if (values[9] == '') continue;
+
+                // Parse the lat/lng JSON string
+                let latLngString = values[9].replaceAll("'", '"')
+                const latLng = JSON.parse(latLngString); // Parse the lat/lng JSON string
+
+                const obj = {
+                    position: {
+                        lat: parseFloat(latLng.lat),
+                        lng: parseFloat(latLng.lng)
+                    },
+                    recordId: values[1],
+                    title: values[2], // Assuming the title comes from the third field
+                    infoTypeID: 0, // Adjust this according to the correct field for infoTypeID
+                    city: values[3], // City    
+                    address: values[4], // Address
+                    country: values[6], // Country
+                    contact: values[7], // Contact name
+                    street: values[8], // Street
+                    marker: null,
+                };
+                data.push(obj);
+            }
+            return data;
+        })
+        .catch(error => {
+            createToast('error', 'Network error');
+            console.error('There was a problem fetching the file:', error);
+        });
+}
+
+async function requestFileInfo() {
+    await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_berlin.txt?raw=True', validTileRequests);
+    await fetchAndAddToList('https://pulseoverlaystorage.blob.core.windows.net/tiles/valid_requests_stockholm.txt?raw=True', validTileRequests);
 }
 
 async function getAddressAtPoint(lat, lng) {
@@ -299,16 +296,35 @@ function generateInfoWindowHTML(infoPoint) {
 }
 
 function addKeyEvents() {
+    // when ctrl is pressed area selection tool is on
+    // when shift is pressed editing of areas is on
+    // else its all off
+
     window.addEventListener("keyup", function (event) {
         if (event.key == "Control") {
             toggleAreaSelectionTool(true, false);
+        }
+        if (event.key == "Shift") {
+            polygons.forEach((polygon, index) => {
+                polygon.setEditable(false);
+                polygon.setDraggable(false);
+            })
         }
     }, false);
     window.addEventListener("keydown", function (event) {
         if (event.ctrlKey && !event.repeat) {
             toggleAreaSelectionTool(true, true);
         }
+        if (event.key == "Shift") {
+            polygons.forEach((polygon, index) => {
+                polygon.setEditable(true);
+                polygon.setDraggable(true);
+            })
+        }
     }, false);
+
+    
+
 }
 
 function addMapOverlayTiler() {
@@ -320,7 +336,7 @@ function addMapOverlayTiler() {
         isPng: true,
         opacity: 1,
     });
-    
+
     maptiler.addListener("tilesloaded", disableLoadingAnimation);
 
     let [lat, lng] = Object.values(city_coord_map)[0];
@@ -343,9 +359,9 @@ function addDefaultMouseEvents(element) {
         let lat = event.latLng.lat();
         let lng = event.latLng.lng();
         getAddressAtPoint(lat, lng)
-        .then((address) => {
-            alert(address);
-        });
+            .then((address) => {
+                alert(address);
+            });
     });
 }
 
@@ -353,119 +369,160 @@ function addInfoMarkers(InfoWindow, AdvancedMarkerElement, PinElement) {
     // Create an info window to share between markers.
     const infoWindow = new InfoWindow();
     // Create the markers.
-    infoPoints.forEach((infoPoint, i) => {
-        const pin = new PinElement({
-            background: Object.values(infoColors)[infoPoint.infoTypeID],
-            borderColor: infoPointsStyle.borderColor,
-            glyphColor: infoPointsStyle.glyphColor,
-        });
+    try {
+        infoPoints.forEach((infoPoint, i) => {
+            const pin = new PinElement({
+                background: Object.values(infoColors)[infoPoint.infoTypeID],
+                borderColor: infoPointsStyle.borderColor,
+                glyphColor: infoPointsStyle.glyphColor,
+            });
 
-        let title = infoPoint.title;
-        let position = infoPoint.position;
-        const marker = new AdvancedMarkerElement({
-            position,
-            map,
-            title: `${title}`,
-            content: pin.element,
-        });
+            let title = infoPoint.title;
+            let position = infoPoint.position;
+            const marker = new AdvancedMarkerElement({
+                position,
+                map,
+                title: `${title}`,
+                content: pin.element,
+            });
 
-        // Add a click listener for each marker, and set up the info window.
-        marker.addListener('click', ({ domEvent, latLng }) => {
-            infoWindow.close();
-            infoWindow.setContent(generateInfoWindowHTML(infoPoint));
-            infoWindow.open(marker.map, marker);
-            map.panTo(latLng);
-        });
+            // Add a click listener for each marker, and set up the info window.
+            marker.addListener('click', ({ domEvent, latLng }) => {
+                infoWindow.close();
+                infoWindow.setContent(generateInfoWindowHTML(infoPoint));
+                infoWindow.open(marker.map, marker);
+                map.panTo(latLng);
+            });
 
-        infoPoints[i].marker = marker;
-    });
+            infoPoints[i].marker = marker;
+        });
+    }
+    catch (error) {
+        console.error("error adding info markers" + error);
+    }
 }
-
 
 polygonColors = ["#CCCC11", "#11EE11"];
 let polygons = [];
 let polygonsOn = true;
-function addPolygonOverlay(coordinates, creatorName) {
-
-    for (let i = 0; i < polygons.length; i++) {
-        const coords = polygons[i].getPath().getArray().map(coord => {
-            return {
-              lat: coord.lat(),
-              lng: coord.lng()
-            }
-          });
-        if (Math.abs(coords[0].lat - coordinates[0].lat) < 0.00001 && Math.abs(coords[0].lng - coordinates[0].lng) < 0.00001) {
-            return;
-        }
-    }
+let polygonCoords = new Map();
+function displayPolygonOverlay(id) {
+    let path = polygonCoords.get(id).polygon;
+    let fillColor = polygonCoords.get(id).fillColor;
+    let creatorName = polygonCoords.get(id).creatorName;
+    let creationDate = polygonCoords.get(id).creationDate;
+    let completionDate = polygonCoords.get(id).completionDate;
 
     const polygon = new google.maps.Polygon({
-        paths: coordinates,
+        paths: path,
         strokeColor: "#000000",
-        strokeOpacity: 0.3,
-        strokeWeight: 0,
-        fillColor: polygonColors[0],
+        strokeOpacity: 1,
+        strokeWeight: 1,
+        fillColor: fillColor,
         fillOpacity: 0.4,
         creatorName: creatorName,
+        id: id,
+        creationDate: creationDate,
+        completionDate: completionDate,
+        editable: false, // changes when shift is pressed
+        draggable: false // changes when shift is pressed
     });
 
     addDefaultMouseEvents(polygon);
-
-    google.maps.event.addListener(polygon, 'click', function (event) {
-        let currentIndex = polygonColors.indexOf(polygon.fillColor);
-        let nextIndex = (currentIndex + 1) % polygonColors.length;
-        polygon.setOptions({fillColor:  polygonColors[nextIndex]});
-
-    });
     
-    google.maps.event.addListener(polygon, 'mouseover', function (event) {
-        infoBoxAtCursor = document.getElementById("infoBoxAtCursor");
-        infoBoxAtCursor.innerHTML = `<p>Work area made by ${polygon.creatorName}</p>`;
+    // update after status change or deleting a vertex
+    google.maps.event.addListener(polygon, 'click', (event) => {
         
+        // if clicked a vertex delete it
+        if (event.vertex != null) {
+            polygon.getPath().removeAt(event.vertex);
+            polygonCoords.get(id).polygon = polygon.getPath().getArray();
+        }
+        else {
+            let currentIndex = polygonColors.indexOf(polygon.fillColor);
+            let nextIndex = (currentIndex + 1) % polygonColors.length;
+            let fillColor = polygonColors[nextIndex];
+            polygon.setOptions({ fillColor: fillColor });
+            polygonCoords.get(id).fillColor = fillColor;
+            if (fillColor == polygonColors[1]) {
+                polygonCoords.get(id).completionDate = getDate();
+            }
+            else {
+                polygonCoords.get(id).completionDate = null;
+            }
+
+        }
+        updatePolygonToServer(polygon.id);
+    });
+
+    // update after shape changes or movement
+    google.maps.event.addListener(polygon, 'dragend', (event) => {
+        polygonCoords.get(polygon.id).polygon = polygon.getPath().getArray();
+        updatePolygonToServer(polygon.id);
+    })
+    google.maps.event.addListener(polygon.getPath(), 'insert_at', function(index, obj) {
+        polygonCoords.get(polygon.id).polygon = polygon.getPath().getArray();
+        updatePolygonToServer(polygon.id);
+    });
+    google.maps.event.addListener(polygon.getPath(), 'set_at', function(index, obj) {
+        polygonCoords.get(polygon.id).polygon = polygon.getPath().getArray();
+        updatePolygonToServer(polygon.id);
+    });
+
+    // display information at curser on mouseover
+    google.maps.event.addListener(polygon, 'mouseover', (event) => {
+        infoBoxAtCursor = document.getElementById("infoBoxAtCursor");
+        let completedString = (polygon.completionDate) ? `</br>Finished: ${completionDate}` : "";
+        infoBoxAtCursor.innerHTML = `<p>Work area made by ${polygon.creatorName} </br>Id: ${polygon.id} </br> Created: ${polygon.creationDate} ${completedString}</p>`;
+
         infoBoxAtCursor.style.left = event.domEvent.clientX + 'px';
         infoBoxAtCursor.style.top = event.domEvent.clientY + 'px';
 
         infoBoxAtCursor.style.visibility = "visible";
     });
-    
+    google.maps.event.addListener(polygon, 'mouseout', (event) => {
+        infoBoxAtCursor = document.getElementById("infoBoxAtCursor");
+        infoBoxAtCursor.style.visibility = "hidden";
+    });
+
     polygon.setMap(map);
     polygons.push(polygon);
 }
 
-function addSquareOverlay(topRight, bottomLeft, creatorName) {
-    addPolygonOverlay([
-        {lat:topRight.lat, lng:bottomLeft.lng},
-        topRight,
-        {lat:bottomLeft.lat, lng:topRight.lng},
-        bottomLeft,
-    ], creatorName);
+function deletePolygons() {
+    for (let i = 0; i < polygons.length; i++) {
+        polygons[i].setMap(null);
+    }
+
+    delete polygonCoords;
 }
 
-
-function createSquareGridOverlay(topRight, bottomLeft, creatorName) {
-
-    const lngIncrement = 0.01;
-    const latIncrement = lngIncrement/2;
-
-    console.log(topRight, bottomLeft, creatorName);
-
-    
-    let startLat = Math.round(topRight.lat * (1 / latIncrement)) / (1 / latIncrement);
-    let startLng = Math.round(topRight.lng * (1 / lngIncrement)) / (1 / lngIncrement);
-
-    for (let lat = startLat; lat + latIncrement < bottomLeft.lat; lat += latIncrement) {
-        for (let lng = startLng; lng + lngIncrement < bottomLeft.lng; lng += lngIncrement) {
-            let topLeft = { lat: lat, lng: lng };
-            let bottomRight = { lat: Math.min(lat + latIncrement, bottomLeft.lat), lng: Math.min(lng + lngIncrement, bottomLeft.lng) };
-
-            // Define a rectangle and set its editable property to true.
-            addSquareOverlay(topLeft, bottomRight, creatorName);
+function addPolygonsFromCoords() {
+    try {
+        for (const item of polygonCoords) {
+            displayPolygonOverlay(item[0]);
         }
+    }
+    catch (error) {
+        createToast("error", "unable to display work areas");
+        console.error(error);
     }
 }
 
-function toggleAllPolygons() {
-    polygonsOn = !polygonsOn;
+const uniqueId = () => {
+    const dateString = Date.now().toString(36);
+    const randomness = Math.random().toString(36).substr(2);
+    return dateString + randomness;
+};
+
+function toggleAllPolygons(force, value) {
+
+    if (force) {
+        polygonsOn = value;
+    }
+    else {
+        polygonsOn = !polygonsOn;
+    }
     for (let i = 0; i < polygons.length; i++) {
         if (polygonsOn) {
             polygons[i].setMap(map);
@@ -475,6 +532,81 @@ function toggleAllPolygons() {
         }
     }
 }
+
+async function addPolygonsToMapFromServer() {
+    let data = { key: user_key };
+    const requestOptions = {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    };
+
+    await fetch(`${API_SERVER_LOCATION}/fetch-polygons`, requestOptions)
+        .then((response) => {
+            return response.json();
+        })
+        .then((response) => {
+            return response;
+        })
+        .then((response) => {
+            for (let i = 0; i < response.polygon_keys.length; i++) {
+                polygonCoords.set(response.polygon_keys[i], response.polygon_values[i]);
+            }
+        })
+        .then(() => {
+            addPolygonsFromCoords();
+        })
+        .catch((error) => { createToast("error", "there was a problem fetching work spaces"); console.log(error) });
+}
+
+function updateAllPolygons() {
+    deletePolygons();
+    addPolygonsToMapFromServer();
+}
+
+function googleMaps2JTS(boundaries) {
+    var coordinates = [];
+    for (var i = 0; i < boundaries.getLength(); i++) {
+        coordinates.push(new jsts.geom.Coordinate(
+            boundaries.getAt(i).lat(), boundaries.getAt(i).lng()));
+    }
+    coordinates.push(coordinates[0]);
+    console.log(coordinates);
+    return coordinates;
+};
+
+/**
+ * findSelfIntersects
+ *
+ * Detect self-intersections in a polygon.
+ *
+ * @param {object} google.maps.Polygon path co-ordinates.
+ * @return {array} array of points of intersections.
+ */
+function findSelfIntersects(googlePolygonPath) {
+    var coordinates = googleMaps2JTS(googlePolygonPath);
+    var geometryFactory = new jsts.geom.GeometryFactory();
+    var shell = geometryFactory.createLinearRing(coordinates);
+    var jstsPolygon = geometryFactory.createPolygon(shell);
+
+    // if the geometry is aleady a simple linear ring, do not
+    // try to find self intersection points.
+    var validator = new jsts.operation.IsSimpleOp(jstsPolygon);
+    if (validator.isSimpleLinearGeometry(jstsPolygon)) {
+        return;
+    }
+
+    var res = [];
+    var graph = new jsts.geomgraph.GeometryGraph(0, jstsPolygon);
+    var cat = new jsts.operation.valid.ConsistentAreaTester(graph);
+    var r = cat.isNodeConsistentArea();
+    if (!r) {
+        var pt = cat.getInvalidPoint();
+        res.push([pt.x, pt.y]);
+    }
+    return res;
+};
+
 
 async function initialize() {
     const { Map, InfoWindow } = await google.maps.importLibrary("maps");
@@ -488,16 +620,33 @@ async function initialize() {
 
     await requestFileInfo();
 
+    await requestInfoPoints();
+
     await addMapOverlayTiler();
 
     addDefaultMouseEvents(map);
 
+    initPolygonDrawingManager()
+
     addInfoMarkers(InfoWindow, AdvancedMarkerElement, PinElement);
+
+    await addPolygonsToMapFromServer();
 
     map.addListener("center_changed", () => {
         if (!document.getElementById("infoBoxAtCursor").matches(':hover')) {
             document.getElementById("infoBoxAtCursor").style.visibility = "hidden";
         }
     })
+
+    const socket = io(API_SERVER_LOCATION);
+
+    socket.on('polygon_push', (msg) => {
+        updateAllPolygons();
+    });
+
+    socket.on('polygon_update', (msg) => {
+        // TODO: dont update every polygon
+        updateAllPolygons();
+    });
 
 }

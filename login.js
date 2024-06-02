@@ -28,7 +28,7 @@ function loadMapInterface() {
 
     // Create a script element for loading the Google Maps API
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBq8XtJsQz7gs29JOWKW7Owd946vQfFel4&callback=initialize`;
+    script.src = `https://maps.googleapis.com/maps/api/js?libraries=drawing&key=AIzaSyBq8XtJsQz7gs29JOWKW7Owd946vQfFel4&callback=initialize`;
     script.async = true;
     script.defer = true;
 
@@ -115,8 +115,8 @@ async function login() {
                 createToast("error", "Login failed");
             }
         }else if (response.status == 401){
-            createToast("error", "Authentication failed")
             console.log("Authentication failed");
+            createToast("error", "Authentication failed")
         } else {
             console.error("Server response not ok:", response.status);
             createToast("error", "Unexpected Error, contact maintenance");
