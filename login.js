@@ -51,6 +51,7 @@ function displayWelcomeMessage() {
         "Hold ctrl and drag with the cursor to organize a new work area.",
         null,
         null,
+        "Hold shift to edit a work area",
         null,
         "Yellow = to be searched, Green = done. Click to toggle",
         null,
@@ -58,7 +59,6 @@ function displayWelcomeMessage() {
         "Left click to get the adress",
         null,
         "More functionality coming soon.",
-        "Work areas are not stored yet.",
         null,
         "Click 'Help' to replay this message.",
     ];

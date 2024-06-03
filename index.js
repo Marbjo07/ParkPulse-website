@@ -141,7 +141,6 @@ function toggleAreaSelectionTool(force, value) {
         areaSelectionOn = !areaSelectionOn;
     }
     console.debug("Eraser is now " + (areaSelectionOn ? "on" : "off"));
-    map.setOptions({ draggable: !areaSelectionOn });
 
     if (areaSelectionOn) {
         drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
@@ -461,10 +460,6 @@ function displayPolygonOverlay(id) {
         updatePolygonToServer(polygon.id);
     })
     google.maps.event.addListener(polygon.getPath(), 'insert_at', function(index, obj) {
-        polygonCoords.get(polygon.id).polygon = polygon.getPath().getArray();
-        updatePolygonToServer(polygon.id);
-    });
-    google.maps.event.addListener(polygon.getPath(), 'set_at', function(index, obj) {
         polygonCoords.get(polygon.id).polygon = polygon.getPath().getArray();
         updatePolygonToServer(polygon.id);
     });
