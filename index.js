@@ -401,7 +401,13 @@ function addInfoMarkers(InfoWindow, AdvancedMarkerElement, PinElement) {
     }
 }
 
-polygonColors = ["#CCCC11", "#11EE11"];
+// Function to update the polygon coordinates to the server
+function updatePolygonPathToServer(id, path) {
+    polygonCoords.get(id).polygon = path.getArray();
+    updatePolygonToServer(id);
+}
+var draggingPolygon = false;
+const polygonColors = ["#CCCC11", "#11EE11"];
 let polygons = [];
 let polygonsOn = true;
 let polygonCoords = new Map();
@@ -424,7 +430,7 @@ function displayPolygonOverlay(id) {
         creationDate: creationDate,
         completionDate: completionDate,
         editable: false, // changes when shift is pressed
-        draggable: false // changes when shift is pressed
+        draggable: false, // changes when shift is pressed
     });
 
     addDefaultMouseEvents(polygon);
@@ -432,10 +438,9 @@ function displayPolygonOverlay(id) {
     // update after status change or deleting a vertex
     google.maps.event.addListener(polygon, 'click', (event) => {
         
-        // if clicked a vertex delete it
+        // if a vertex is clicked, delete it
         if (event.vertex != null) {
             polygon.getPath().removeAt(event.vertex);
-            polygonCoords.get(id).polygon = polygon.getPath().getArray();
         }
         else {
             let currentIndex = polygonColors.indexOf(polygon.fillColor);
@@ -451,24 +456,35 @@ function displayPolygonOverlay(id) {
             }
 
         }
-        updatePolygonToServer(polygon.id);
+        updatePolygonPathToServer(polygon.id, polygon.getPath());
     });
 
     // update after shape changes or movement
-    google.maps.event.addListener(polygon, 'dragend', (event) => {
-        polygonCoords.get(polygon.id).polygon = polygon.getPath().getArray();
-        updatePolygonToServer(polygon.id);
-    })
-    google.maps.event.addListener(polygon.getPath(), 'insert_at', function(index, obj) {
-        polygonCoords.get(polygon.id).polygon = polygon.getPath().getArray();
-        updatePolygonToServer(polygon.id);
+    google.maps.event.addListener(polygon.getPath(), 'insert_at', (index, obj) => {
+        updatePolygonPathToServer(polygon.id, polygon.getPath());
     });
+
+    google.maps.event.addListener(polygon, 'dragstart', (event) => {
+        draggingPolygon = true;
+    })
+
+    google.maps.event.addListener(polygon.getPath(), 'set_at', (index, obj) => {
+        if (!draggingPolygon) {
+            updatePolygonPathToServer(polygon.id, polygon.getPath());
+        }
+    });
+
+    google.maps.event.addListener(polygon, 'dragend', (event) => {
+        updatePolygonPathToServer(polygon.id, polygon.getPath());
+        draggingPolygon = false;
+    })
+    
 
     // display information at curser on mouseover
     google.maps.event.addListener(polygon, 'mouseover', (event) => {
         infoBoxAtCursor = document.getElementById("infoBoxAtCursor");
         let completedString = (polygon.completionDate) ? `</br>Finished: ${completionDate}` : "";
-        infoBoxAtCursor.innerHTML = `<p>Work area made by ${polygon.creatorName} </br>Id: ${polygon.id} </br> Created: ${polygon.creationDate} ${completedString}</p>`;
+        infoBoxAtCursor.innerHTML = `<p>Work area made by ${polygon.creatorName} </br>Created: ${polygon.creationDate} ${completedString}</p>`;
 
         infoBoxAtCursor.style.left = event.domEvent.clientX + 'px';
         infoBoxAtCursor.style.top = event.domEvent.clientY + 'px';
