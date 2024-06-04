@@ -56,47 +56,47 @@ function formatDate(date) {
     let datePart = [
         date.getDate(),
         date.toLocaleString('default', { month: 'long' }),
-      date.getFullYear()
+        date.getFullYear()
     ].map((n, i) => n.toString().padStart(i === 2 ? 4 : 2, "0")).join("/");
     let timePart = [
-      date.getHours(),
-      date.getMinutes(),
-      date.getSeconds()
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds()
     ].map((n, i) => n.toString().padStart(2, "0")).join(":");
     return datePart + " " + timePart;
-  }
+}
 
 function getDate() {
     return formatDate(new Date());
 }
 
 function pushAllPolygonsToServer() {
-     // push polygon to server
-     let data = { key: user_key, polygon_keys: Array.from(polygonCoords.keys()), polygon_values: Array.from(polygonCoords.values()) };
-     const requestOptions = {
-         method: "POST",
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(data)
-     };
- 
-     fetch(`${API_SERVER_LOCATION}/push-polygons`, requestOptions)
-     .catch(() => {
-         createToast("error", "faild to sync with server");
-     });
+    // push polygon to server
+    let data = { key: user_key, polygon_keys: Array.from(polygonCoords.keys()), polygon_values: Array.from(polygonCoords.values()) };
+    const requestOptions = {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    };
+
+    fetch(`${API_SERVER_LOCATION}/push-polygons`, requestOptions)
+        .catch(() => {
+            createToast("error", "faild to sync with server");
+        });
 }
 
 function updatePolygonToServer(id) {
     let data = { key: user_key, polygon_key: id, polygon_value: polygonCoords.get(id) };
-     const requestOptions = {
-         method: "POST",
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(data)
-     };
- 
-     fetch(`${API_SERVER_LOCATION}/update-polygon`, requestOptions)
-     .catch(() => {
-         createToast("error", "faild to update work space with server");
-     });
+    const requestOptions = {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    };
+
+    fetch(`${API_SERVER_LOCATION}/update-polygon`, requestOptions)
+        .catch(() => {
+            createToast("error", "faild to update work space with server");
+        });
 }
 
 // handles the rest of polygon creation. talking with server, ownership and etc
@@ -128,8 +128,6 @@ function completedPolygonHandler(polygon) {
     pushAllPolygonsToServer();
 
     toggleAreaSelectionTool(true, false);// disable area selection
-    // remove the intermediate polygon
-    polygon.setMap(null);
 }
 
 function toggleAreaSelectionTool(force, value) {
@@ -150,7 +148,7 @@ function toggleAreaSelectionTool(force, value) {
     else {
         drawingManager.setDrawingMode(null);
         drawingManager.setMap(null);
-        google.maps.event.clearListeners(drawingManager, 'polygoncomplete');   
+        google.maps.event.clearListeners(drawingManager, 'polygoncomplete');
     }
 }
 
@@ -322,7 +320,7 @@ function addKeyEvents() {
         }
     }, false);
 
-    
+
 
 }
 
@@ -434,10 +432,10 @@ function displayPolygonOverlay(id) {
     });
 
     addDefaultMouseEvents(polygon);
-    
+
     // update after status change or deleting a vertex
     google.maps.event.addListener(polygon, 'click', (event) => {
-        
+
         // if a vertex is clicked, delete it
         if (event.vertex != null) {
             polygon.getPath().removeAt(event.vertex);
@@ -478,7 +476,7 @@ function displayPolygonOverlay(id) {
         updatePolygonPathToServer(polygon.id, polygon.getPath());
         draggingPolygon = false;
     })
-    
+
 
     // display information at curser on mouseover
     google.maps.event.addListener(polygon, 'mouseover', (event) => {
@@ -509,14 +507,14 @@ function deletePolygons() {
 }
 
 function addPolygonsFromCoords() {
-    try {
-        for (const item of polygonCoords) {
+    for (const item of polygonCoords) {
+        try {
             displayPolygonOverlay(item[0]);
         }
-    }
-    catch (error) {
-        createToast("error", "unable to display work areas");
-        console.error(error);
+        catch (error) {
+            createToast("error", "unable to display all work areas");
+            console.error(error);
+        }
     }
 }
 
@@ -552,12 +550,9 @@ async function addPolygonsToMapFromServer() {
         body: JSON.stringify(data)
     };
 
-    await fetch(`${API_SERVER_LOCATION}/fetch-polygons`, requestOptions)
+    return await fetch(`${API_SERVER_LOCATION}/fetch-polygons`, requestOptions)
         .then((response) => {
             return response.json();
-        })
-        .then((response) => {
-            return response;
         })
         .then((response) => {
             for (let i = 0; i < response.polygon_keys.length; i++) {
@@ -567,8 +562,12 @@ async function addPolygonsToMapFromServer() {
         .then(() => {
             addPolygonsFromCoords();
         })
-        .catch((error) => { createToast("error", "there was a problem fetching work spaces"); console.log(error) });
-}
+        .catch((error) => {
+            createToast("error", "there was a problem fetching work spaces");
+            console.error(error);
+        });
+};
+
 
 function updateAllPolygons() {
     deletePolygons();
