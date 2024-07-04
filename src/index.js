@@ -1,4 +1,4 @@
-const API_SERVER_LOCATION = "http://127.0.0.1:5000";
+const API_SERVER_LOCATION = "https://parkpulse-api.azurewebsites.net";
 const CURRENT_CITY = 'stockholm';
 const DEFAULT_MODEL_VERSION = 'v2';
 
