@@ -68,4 +68,8 @@ async function login() {
         createToast("error", "Internal server error");
     }
     disableLoadingAnimation();
+
+    // Enable login button incase of unsuccessful login attempt
+    document.getElementById("login-button").disabled = true;
+
 }
