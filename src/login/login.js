@@ -70,6 +70,6 @@ async function login() {
     disableLoadingAnimation();
 
     // Enable login button incase of unsuccessful login attempt
-    document.getElementById("login-button").disabled = true;
+    document.getElementById("login-button").disabled = false;
 
 }
