@@ -1,0 +1,39 @@
+html, body {
+    height:100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: #333;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#spinner{
+    /*   for centering div */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    z-index: 101;
+    visibility: hidden;
+    pointer-events: none;
+
+    /*   spinner div css */
+    height : 50px;
+    width : 50px;
+    border-radius : 50%;
+    /*   background-color : red; */
+    border : 10px solid #ccc;
+    border-top-color : #007bff;
+    animation : spin 1s linear infinite;
+}
+    
+@keyframes spin{
+    0%{
+        transform : rotate(0deg);
+    }
+    100%{
+        transform : rotate(360deg);
+    }
+}

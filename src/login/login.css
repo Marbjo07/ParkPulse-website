@@ -1,0 +1,14 @@
+#login-popup {
+    position: absolute;
+    
+    top: 50%;
+    left: 50%;
+  
+    transform: translate(-50%, -50%);
+  
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 100;/* Ensure popup is above other elements */
+}

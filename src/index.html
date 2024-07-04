@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkPulse</title>
+
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="controlpanel/controlpanel.css" type="text/css">
+    <link rel="stylesheet" href="login/login.css" type="text/css">
+    <link rel="stylesheet" href="map/map.css" type="text/css">
+    <link rel="stylesheet" href="notifications/notifications.css" type="text/css">
+    <link rel="stylesheet" href="style.css" type="text/css">
+
+
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+
+    <script src="controlpanel/controlpanel.js"></script>
+    <script src="map/map.js"></script>
+    <script src="notifications/notifications.js"></script>
+
+</head>
+<body>
+    
+
+    
+    <form id="login-popup">
+        <h2>Login</h2>
+        <label for="username" >Username:</label> <input type="text" id="username" autocomplete="username"><br><br>
+        <label for="password">Password:</label> <input type="password" id="password" autocomplete="current-password"><br><br>
+
+        <button type="button" id="login-button" onclick="login()">Login</button> <!-- Specify type="button" to prevent form submission -->
+    </form>
+
+    <div class="control-panel">
+        <div class="dropdown">
+            <button class="dropbtn">Map Styles</button>
+            <div class="dropdown-content" id="map-style-menu">
+                <div class="fancy-button dropdown-element" value="satellite">Satellite</div>
+                <div class="fancy-button dropdown-element" value="road">Road</div>
+                <div class="fancy-button dropdown-element" value="grayscale_light">Grayscale Light</div>
+                <div class="fancy-button dropdown-element" value="grayscale_dark">Grayscale Dark</div>
+                <div class="fancy-button dropdown-element" value="night">Night</div>
+            </div>
+        </div>
+
+        <div id="toggle-custom-map-tiler" class="fancy-button" onclick="toggleCustomMapTiler()">Toggle Overlay </div>
+
+        <div class="dropdown">
+            <button class="dropbtn">Model Version</button>
+            <div class="dropdown-content" id="model-version-menu">
+                <div class="fancy-button dropdown-element" value="v1">Version 1.0</div>
+                <div class="fancy-button dropdown-element" value="v2">Version 2.0</div>
+            </div>
+        </div>
+    </div>
+    
+
+    <ul class="notifications">
+        <!-- li toast -->
+    </ul>
+
+    <div id="spinner"></div>
+    <script src="index.js"></script>
+    <script src="login/login.js"></script>
+
+            
+</body>
+</html>
