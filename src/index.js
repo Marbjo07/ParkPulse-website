@@ -3,7 +3,7 @@ const CURRENT_CITY = 'stockholm';
 const DEFAULT_MODEL_VERSION = 'v2';
 
 const cityCoordMap = {
-    'stockholm': {lat: 59.3715, lng: 17.8522}
+    'stockholm': {lat: 59.368868, lng: 17.834327}
 };
 
 const cityBoundsMap = {
@@ -13,8 +13,8 @@ const cityBoundsMap = {
 function displayWelcomeMessage() {
     const toastMessages = [
         "Welcome to beta testing!",
-        "Red mark parked cars.",
-        "Blue marks non-personal parked cars (e.g., company vehicles)",
+        "Red marks personal parked cars.",
+        "Blue marks commercial parked cars.",
         "Green mark garages.",
         "Click 'Help' to replay this message.",
     ];
@@ -22,9 +22,9 @@ function displayWelcomeMessage() {
     const messageType = "info";
     
     // play the first message without waiting
-    let index = 1;
     createToast(messageType, toastMessages[0]);
     
+    let index = 1;
     // play messages in series with a pause between
     const intervalId = setInterval(() => {
         if (index < toastMessages.length) {

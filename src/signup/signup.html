@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkPulse</title>
+
+    <link rel="stylesheet" href="src/login/login.css" type="text/css">
+    <link rel="stylesheet" href="src/notifications/notifications.css" type="text/css">
+    <link rel="stylesheet" href="src/style.css" type="text/css">
+
+    <script src="src/notifications/notifications.js"></script>
+    <script src="src/signup/signup.js"></script>
+
+</head>
+
+<body>
+
+    <form class="login-popup" id="signup-popup" action="/complete_user_setup" method="post">
+        <h2>Setup Account</h2>
+
+        <input type="hidden" name="token" id="token" value="{{ token }}" disabled>
+        <input type="hidden" name="serverlocation" id="serverlocation" value="{{ serverlocation }}" disabled>
+        <input type="hidden" name="redirectpage" id="redirectpage" value="{{ redirectpage }}" disabled>
+        <label for="username" >Email:</label> <input type="text" id="username" value="{{ email }}" disabled><br><br>
+        <label for="password">Password:</label> <input type="password" id="password"><br><br>
+        <input value="Submit" type="button" onclick="submitform()">
+        <!-- Specify type="button" to prevent form submission -->
+    </form>
+
+    <ul class="notifications">
+        <!-- li toast -->
+    </ul>
+
+    <div id="signature">
+        <p>Created by Marius Bjørhei</p>
+        <p>Contact: marius.bjorhei@gmail.com</p>
+    </div>
+</body>
+
+</html>

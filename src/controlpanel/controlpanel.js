@@ -8,6 +8,9 @@ function addEvenListnerToDropdownElements(dropdownMenuId, eventFunction) {
     });
 }
 
+var displayPersonal = true;
+var displayCommercial = true; 
+var displayGarages = true;
 
 function initControlPanel() {
     addEvenListnerToDropdownElements('map-style-menu', (element) => {
@@ -15,11 +18,21 @@ function initControlPanel() {
         map.setStyle({'style': selectedStyle});
     });
 
-    addEvenListnerToDropdownElements('model-version-menu', (element) => {
-        let currentModelVersion = element.getAttribute("value");
+    addEvenListnerToDropdownElements('model-filter-menu', (element) => {
+        let buttonClicked = element.getAttribute("value");
+        if (buttonClicked == "personal") {
+            displayPersonal = !displayPersonal;
+        }
+        if (buttonClicked == "commercial") {
+            displayCommercial = !displayCommercial;
+        }
+        if (buttonClicked == "garages") {
+            displayGarages = !displayGarages;
+        }
 
         // Restart map tiler
         removeCustomMapTiler();
-        initCustomMapTiler(currentModelVersion);
+        initCustomMapTiler(DEFAULT_MODEL_VERSION, displayPersonal, displayCommercial, displayGarages);
     });
+
 }

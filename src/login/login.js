@@ -12,22 +12,19 @@ async function sha256(message) {
     return hashHex;
 }
 
-async function hashPassword(password) {
-    const hashedPassword = await sha256(password);
-    return hashedPassword;
-}
-
-var user_key = null;
-var azure_key = null;
+var username = null;
+var sessionKey = null;
+var azureKey = null;
 
 async function login() {
     const password = document.getElementById("password").value;
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await sha256(password);
 
     const data = {
-        username: document.getElementById("username").value,
+        username: document.getElementById("email").value,
         password_hash: hashedPassword
     };
+    username = data.username;
 
     try {
         // Inform user login is processing
@@ -47,9 +44,9 @@ async function login() {
         if (response.ok) {
             // unpack response
             const json = await response.json();
-            user_key = json.key;
-            azure_key = json.azure_key;
-            console.log("Login successful. Key:", user_key);
+            sessionKey = json.key;
+            azureKey = json.azure_key;
+            console.log("Login successful. Key:", sessionKey);
             
             // Hide login popup
             document.getElementById("login-popup").style.display = "none";

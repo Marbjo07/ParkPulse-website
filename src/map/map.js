@@ -1,8 +1,33 @@
 let map;
 let customMapTilerLayer;
 
-function getTileURL(currentModelVersion) {
-    return `${API_SERVER_LOCATION}/${currentModelVersion}/img/{z}/img_{x}_{y}.png`;
+function interleaveStrings(stringA, stringB) {
+    outputString = "";
+    for (let i = 0; i < Math.max(stringA.length, stringB.length); i++) {
+        if (i < stringA.length) {
+            outputString += stringA[i];
+        }
+        if (i < stringB.length) {
+            outputString += stringB[i];
+        }
+    }
+    return outputString;
+}
+
+async function getTileURL(modelVersion, displayPersonal, displayCommercial, displayGarages) {
+    // create tileURL
+    let tileURL = `${API_SERVER_LOCATION}/${modelVersion}/img/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
+    // add filter flags
+    if (!displayPersonal) {
+        tileURL += "&personal=False";
+    }
+    if (!displayCommercial) {
+        tileURL += "&commercial=False";
+    }
+    if (!displayGarages) {
+        tileURL += "&garages=False";
+    }
+    return tileURL;
 }
 
 function enableLoadingAnimation() {
@@ -13,10 +38,10 @@ function disableLoadingAnimation() {
     document.getElementById('spinner').style.visibility = "hidden";
 }   
 
-function initCustomMapTiler(currentModelVersion) {
+async function initCustomMapTiler(modelVersion, displayPersonal, displayCommercial, displayGarages) {
     let current_city = CURRENT_CITY; // TEMP changing after multiple cities
     customMapTilerLayer = new atlas.layer.TileLayer({
-        tileUrl: getTileURL(currentModelVersion),
+        tileUrl: await getTileURL(modelVersion, displayPersonal, displayCommercial, displayGarages),
         tileSize: 256,
         opacity: 0.7,
         bounds: cityBoundsMap[current_city]
@@ -48,7 +73,7 @@ function mapClickEvent(event) {
     console.log(`Latitude: ${lat}, Longitude: ${lon}`);
 
     // Create the URL for the reverse geocode API
-    var url = `https://atlas.microsoft.com/search/address/reverse/json?api-version=1.0&subscription-key=${azure_key}&query=${lat},${lon}`;
+    var url = `https://atlas.microsoft.com/search/address/reverse/json?api-version=1.0&subscription-key=${azureKey}&query=${lat},${lon}`;
 
     // Make the API request and display 
     fetch(url)
@@ -69,7 +94,6 @@ function initMap() {
     const mapDiv = document.createElement("div");
     mapDiv.id = "map";
     document.body.appendChild(mapDiv);
-
     map = new atlas.Map('map', {
         center: [cityCoordMap[CURRENT_CITY].lng, cityCoordMap[CURRENT_CITY].lat],
         zoom: 15,
@@ -79,14 +103,29 @@ function initMap() {
         minZoom: 10,
         authOptions: {
             authType: 'subscriptionKey',
-            subscriptionKey: azure_key
+            subscriptionKey: azureKey
         },
         dragRotateInteraction:false
     });
-
     // Add custom map tiler and map click event
-    map.events.add('ready', function () {
-        initCustomMapTiler(DEFAULT_MODEL_VERSION);
+    map.events.add('ready', async () => {
+        initCustomMapTiler(DEFAULT_MODEL_VERSION, true, true, true);
         map.events.add('click', mapClickEvent);
+    });
+    // Handle tile loading errors
+    map.events.add('error', (e) => {
+        console.log(e)
+        // Check for status code 419 "Session expired"
+        if (e.error && e.error.status == 419) {
+            // Delete map            
+            const mapDiv = document.getElementById("map")
+            mapDiv.remove();
+
+
+            const userMessage = document.createElement("h1");
+            userMessage.id = "userMessage";
+            userMessage.textContent = "Session terminated, please login again";
+            document.body.appendChild(userMessage);
+        }
     });
 }
