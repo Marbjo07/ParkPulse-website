@@ -14,12 +14,12 @@ function interleaveStrings(stringA, stringB) {
     return outputString;
 }
 
-async function getTileURL(modelVersion, displayPersonal, displayCommercial, displayGarages) {
+async function getTileURL(modelVersion, displayResidential, displayCommercial, displayGarages) {
     // create tileURL
     let tileURL = `${API_SERVER_LOCATION}/${modelVersion}/img/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
     // add filter flags
-    if (!displayPersonal) {
-        tileURL += "&personal=False";
+    if (!displayResidential) {
+        tileURL += "&residential=False";
     }
     if (!displayCommercial) {
         tileURL += "&commercial=False";
@@ -38,10 +38,10 @@ function disableLoadingAnimation() {
     document.getElementById('spinner').style.visibility = "hidden";
 }   
 
-async function initCustomMapTiler(modelVersion, displayPersonal, displayCommercial, displayGarages) {
+async function initCustomMapTiler(modelVersion, displayResidential, displayCommercial, displayGarages) {
     let current_city = CURRENT_CITY; // TEMP changing after multiple cities
     customMapTilerLayer = new atlas.layer.TileLayer({
-        tileUrl: await getTileURL(modelVersion, displayPersonal, displayCommercial, displayGarages),
+        tileUrl: await getTileURL(modelVersion, displayResidential, displayCommercial, displayGarages),
         tileSize: 256,
         opacity: 0.7,
         bounds: cityBoundsMap[current_city]
@@ -99,6 +99,7 @@ function initMap() {
         zoom: 15,
         view: 'Auto',
         style: 'satellite',
+        maxBounds: cityBoundsMap["stockholm"],
         maxZoom: 19,
         minZoom: 10,
         authOptions: {

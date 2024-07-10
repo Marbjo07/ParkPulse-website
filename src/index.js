@@ -1,4 +1,5 @@
 const API_SERVER_LOCATION = "https://parkpulse-api.azurewebsites.net";
+//const API_SERVER_LOCATION = "http://127.0.0.1:5000";
 const CURRENT_CITY = 'stockholm';
 const DEFAULT_MODEL_VERSION = 'v2';
 
@@ -7,15 +8,16 @@ const cityCoordMap = {
 };
 
 const cityBoundsMap = {
-    'stockholm': [17.5, 59, 18.4, 59.55],
+    'stockholm': [17.505, 58.95, 18.395, 59.545],
 }
 
 function displayWelcomeMessage() {
     const toastMessages = [
         "Welcome to beta testing!",
-        "Red marks personal parked cars.",
-        "Blue marks commercial parked cars.",
+        "Red marks residential cars.",
+        "Blue marks commercial cars.",
         "Green mark garages.",
+        "Click to get the address.",
         "Click 'Help' to replay this message.",
     ];
     

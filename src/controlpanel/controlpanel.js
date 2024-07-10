@@ -8,7 +8,7 @@ function addEvenListnerToDropdownElements(dropdownMenuId, eventFunction) {
     });
 }
 
-var displayPersonal = true;
+var displayResidential = true;
 var displayCommercial = true; 
 var displayGarages = true;
 
@@ -20,8 +20,8 @@ function initControlPanel() {
 
     addEvenListnerToDropdownElements('model-filter-menu', (element) => {
         let buttonClicked = element.getAttribute("value");
-        if (buttonClicked == "personal") {
-            displayPersonal = !displayPersonal;
+        if (buttonClicked == "residential") {
+            displayResidential = !displayResidential;
         }
         if (buttonClicked == "commercial") {
             displayCommercial = !displayCommercial;
@@ -32,7 +32,7 @@ function initControlPanel() {
 
         // Restart map tiler
         removeCustomMapTiler();
-        initCustomMapTiler(DEFAULT_MODEL_VERSION, displayPersonal, displayCommercial, displayGarages);
+        initCustomMapTiler(DEFAULT_MODEL_VERSION, displayResidential, displayCommercial, displayGarages);
     });
 
 }
