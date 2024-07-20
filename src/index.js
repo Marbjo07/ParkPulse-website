@@ -1,14 +1,16 @@
 const API_SERVER_LOCATION = "https://parkpulse-api.azurewebsites.net";
 //const API_SERVER_LOCATION = "http://127.0.0.1:5000";
-const CURRENT_CITY = 'stockholm';
-const DEFAULT_MODEL_VERSION = 'v2';
+const DEFUALT_CITY = 'stockholm';
 
 const cityCoordMap = {
-    'stockholm': {lat: 59.368868, lng: 17.834327}
+    'stockholm': {lat: 59.368868, lng: 17.834327},
+    'munich': {lat:48.171188, lng:11.517166}
 };
 
 const cityBoundsMap = {
+    // min_lng, min_lat, max_lng, max_lat
     'stockholm': [17.505, 58.95, 18.395, 59.545],
+    'munich': [10.929, 47.794, 12.110, 48.508]
 }
 
 function displayWelcomeMessage() {
@@ -43,6 +45,6 @@ function displayWelcomeMessage() {
 
 function initApp() {
     displayWelcomeMessage();
-    initMap();
+    initMap(DEFUALT_CITY);
     initControlPanel();
 }

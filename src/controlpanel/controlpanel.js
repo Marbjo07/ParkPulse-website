@@ -11,11 +11,21 @@ function addEvenListnerToDropdownElements(dropdownMenuId, eventFunction) {
 var displayResidential = true;
 var displayCommercial = true; 
 var displayGarages = true;
+var currentCity = DEFUALT_CITY;
 
 function initControlPanel() {
     addEvenListnerToDropdownElements('map-style-menu', (element) => {
         let selectedStyle = element.getAttribute("value");
         map.setStyle({'style': selectedStyle});
+    });
+
+    addEvenListnerToDropdownElements('city-menu', (element) => {
+        let selectedCity = element.getAttribute("value");
+        initMap(selectedCity);
+        initCustomMapTiler(selectedCity);
+        
+        const currentCityHeader = document.getElementById('current-city')
+        currentCityHeader.innerText = selectedCity;
     });
 
     addEvenListnerToDropdownElements('model-filter-menu', (element) => {
@@ -32,7 +42,7 @@ function initControlPanel() {
 
         // Restart map tiler
         removeCustomMapTiler();
-        initCustomMapTiler(DEFAULT_MODEL_VERSION, displayResidential, displayCommercial, displayGarages);
+        initCustomMapTiler(currentCity, displayResidential, displayCommercial, displayGarages);
     });
 
 }

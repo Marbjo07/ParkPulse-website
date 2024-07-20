@@ -17,7 +17,6 @@
 
     <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
 
-    <script src="src/controlpanel/controlpanel.js"></script>
     <script src="src/map/map.js"></script>
     <script src="src/notifications/notifications.js"></script>
 
@@ -44,14 +43,20 @@
             </div>
         </div>
 
-        <div id="toggle-custom-map-tiler" class="fancy-button" onclick="toggleCustomMapTiler()">Toggle Overlay </div>
-
         <div class="dropdown">
             <button class="dropbtn">Filter</button>
             <div class="dropdown-content" id="model-filter-menu">
                 <div class="fancy-button dropdown-element" value="residential">Toggle Residential</div>
                 <div class="fancy-button dropdown-element" value="commercial">Toggle Commercial</div>
                 <div class="fancy-button dropdown-element" value="garages">Toggle Garages</div  >
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="dropbtn">City Menu</button>
+            <div class="dropdown-content" id="city-menu">
+                <div class="fancy-button dropdown-element" value="stockholm">Stockholm</div>
+                <div class="fancy-button dropdown-element" value="munich">Munich</div>
             </div>
         </div>
         
@@ -68,6 +73,7 @@
     <div id="spinner"></div>
     <script src="src/login/login.js"></script>
     <script src="src/index.js"></script>
+    <script src="src/controlpanel/controlpanel.js"></script>
 
     <div id="signature">
     <p>Created by Marius Bjørhei</p>

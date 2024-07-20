@@ -6,6 +6,7 @@ app = Flask(__name__, static_folder="src", template_folder='src')
 CORS(app) # This will enable CORS for all routes
 
 if app.debug:
+    print("app running in debug")
     API_SERVER_LOCATION = "http://127.0.0.1:5000"
     WEB_SITE_LOCATION = "http://127.0.0.1:5500"
 else:

@@ -1,22 +1,9 @@
 let map;
 let customMapTilerLayer;
 
-function interleaveStrings(stringA, stringB) {
-    outputString = "";
-    for (let i = 0; i < Math.max(stringA.length, stringB.length); i++) {
-        if (i < stringA.length) {
-            outputString += stringA[i];
-        }
-        if (i < stringB.length) {
-            outputString += stringB[i];
-        }
-    }
-    return outputString;
-}
-
-async function getTileURL(modelVersion, displayResidential, displayCommercial, displayGarages) {
+async function getTileURL(cityName, displayResidential, displayCommercial, displayGarages) {
     // create tileURL
-    let tileURL = `${API_SERVER_LOCATION}/${modelVersion}/img/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
+    let tileURL = `${API_SERVER_LOCATION}/${cityName}/img/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
     // add filter flags
     if (!displayResidential) {
         tileURL += "&residential=False";
@@ -38,13 +25,12 @@ function disableLoadingAnimation() {
     document.getElementById('spinner').style.visibility = "hidden";
 }   
 
-async function initCustomMapTiler(modelVersion, displayResidential, displayCommercial, displayGarages) {
-    let current_city = CURRENT_CITY; // TEMP changing after multiple cities
+async function initCustomMapTiler(currentCity, displayResidential, displayCommercial, displayGarages) {
     customMapTilerLayer = new atlas.layer.TileLayer({
-        tileUrl: await getTileURL(modelVersion, displayResidential, displayCommercial, displayGarages),
+        tileUrl: await getTileURL(currentCity, displayResidential, displayCommercial, displayGarages),
         tileSize: 256,
         opacity: 0.7,
-        bounds: cityBoundsMap[current_city]
+        bounds: cityBoundsMap[currentCity]
     });
     map.layers.add(customMapTilerLayer);
 }
@@ -89,17 +75,17 @@ function mapClickEvent(event) {
         .catch(error => console.error('Error:', error));
 };
 
-function initMap() {
-    // create map div
+function initMap(currentCity) {
+    // Create map div
     const mapDiv = document.createElement("div");
     mapDiv.id = "map";
     document.body.appendChild(mapDiv);
     map = new atlas.Map('map', {
-        center: [cityCoordMap[CURRENT_CITY].lng, cityCoordMap[CURRENT_CITY].lat],
+        center: [cityCoordMap[currentCity].lng, cityCoordMap[currentCity].lat],
         zoom: 15,
         view: 'Auto',
         style: 'satellite',
-        maxBounds: cityBoundsMap["stockholm"],
+        maxBounds: cityBoundsMap[currentCity],
         maxZoom: 19,
         minZoom: 10,
         authOptions: {
@@ -110,7 +96,7 @@ function initMap() {
     });
     // Add custom map tiler and map click event
     map.events.add('ready', async () => {
-        initCustomMapTiler(DEFAULT_MODEL_VERSION, true, true, true);
+        initCustomMapTiler(currentCity, true, true, true);
         map.events.add('click', mapClickEvent);
     });
     // Handle tile loading errors
