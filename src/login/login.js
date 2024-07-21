@@ -41,16 +41,16 @@ async function login() {
             body: JSON.stringify(data),
         });
         
+        disableLoadingAnimation();
         if (response.ok) {
             // unpack response
             const json = await response.json();
             sessionKey = json.key;
             azureKey = json.azure_key;
-            console.log("Login successful. Key:", sessionKey);
-            
+
             // Hide login popup
             document.getElementById("login-popup").style.display = "none";
-            
+
             // Start app🥳
             initApp();
         } else if (response.status == 401){
@@ -63,9 +63,8 @@ async function login() {
     } catch (error) {
         console.error("Fetch error:", error);
         createToast("error", "Internal server error");
+        disableLoadingAnimation();
     }
-    disableLoadingAnimation();
-
     // Enable login button incase of unsuccessful login attempt
     document.getElementById("login-button").disabled = false;
 

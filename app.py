@@ -17,7 +17,7 @@ user_signup_token_dict = {}
 
 @app.route('/')
 def index():
-    return app.send_static_file("index.html")
+    return render_template("index.html", api_server_location=API_SERVER_LOCATION)
 
 
 @app.route('/signup')
