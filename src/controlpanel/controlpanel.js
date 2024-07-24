@@ -16,6 +16,11 @@ function addEvenListnerToDropdownElements(dropdownMenuId, eventFunction) {
 function loadFilterState(filterName) {
     const checked = JSON.parse(localStorage.getItem(filterName));
 
+    // filterName is null for new users
+    if (checked == null) {
+        checked = true;
+    }
+    
     // state is inverted when shown?
     document.getElementById(filterName).checked = !checked;
 
