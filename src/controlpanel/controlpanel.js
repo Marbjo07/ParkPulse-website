@@ -111,12 +111,15 @@ async function initControlPanel() {
         enableLoadingAnimation();
         let selectedCity = element.getAttribute("value");
 
-        initMap(selectedCity);
+        afterInitDone = () => {
+            const currentCityHeader = document.getElementById('current-city')
+            currentCityHeader.innerText = selectedCity;
 
-        const currentCityHeader = document.getElementById('current-city')
-        currentCityHeader.innerText = selectedCity;
+            currentCity = selectedCity;
+        };
 
-        currentCity = selectedCity;
+        initMap(selectedCity, afterInitDone);
+
         
     });
 }

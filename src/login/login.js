@@ -32,7 +32,7 @@ async function login() {
         enableLoadingAnimation();
         
         // Disable the login button to prevent multiple submissions
-        document.getElementById("login-button").disabled = true;
+        document.getElementById("submit-button").disabled = true;
 
         // Send login request
         const response = await fetch(`${API_SERVER_LOCATION}/login`, {
@@ -66,6 +66,24 @@ async function login() {
         disableLoadingAnimation();
     }
     // Enable login button incase of unsuccessful login attempt
-    document.getElementById("login-button").disabled = false;
+    document.getElementById("submit-button").disabled = false;
 
+}
+
+// TODO: create a seperate page
+function forgotPassword() {
+    const fields = readFormFields("login-popup");
+
+    const email = fields.email;
+    console.log(email);
+
+    if (email == null) {
+        createToast("error", "Enter email first");
+    }
+
+    // TODO: implement notification system to notify admin
+
+    setTimeout(() => {
+        createToast("info", "You will receive an email within a couple hours");
+    }, 1000);
 }

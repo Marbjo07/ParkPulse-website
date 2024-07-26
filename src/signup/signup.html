@@ -6,28 +6,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ParkPulse</title>
 
-    <link rel="stylesheet" href="src/login/login.css" type="text/css">
     <link rel="stylesheet" href="src/notifications/notifications.css" type="text/css">
     <link rel="stylesheet" href="src/style.css" type="text/css">
+    <link rel="stylesheet" href="src/signup/signup.css" type="text/css">
+    <link rel="stylesheet" href="src/popup/popup.css" type="text/css">
 
     <script src="src/notifications/notifications.js"></script>
     <script src="src/signup/signup.js"></script>
-
+    <script src="src/popup/popup.js"></script>
 </head>
 
 <body>
 
-    <form class="login-popup" id="signup-popup" action="/complete_user_setup" method="post">
-        <h2>Setup Account</h2>
+    <form class="popup" id="signup-popup" action="/complete_user_setup" method="post">
+        <div class="popup-header">
+            <h1 class="popup-title">Setup Account</h1>
+        </div>
 
-        <input type="hidden" name="token" id="token" value="{{ token }}" disabled>
-        <input type="hidden" name="serverlocation" id="serverlocation" value="{{ serverlocation }}" disabled>
-        <input type="hidden" name="redirectpage" id="redirectpage" value="{{ redirectpage }}" disabled>
-        <label for="username" >Email:</label> <input type="text" id="username" value="{{ email }}" disabled><br><br>
-        <label for="password">Password:</label> <input type="password" id="password"><br><br>
-        <input value="Submit" type="button" onclick="submitform()">
-        <!-- Specify type="button" to prevent form submission -->
+        <div class="popup-body">
+            <input type="hidden" name="token" id="token" value="{{ token }}" disabled>
+            <input type="hidden" name="serverlocation" id="serverlocation" value="{{ serverlocation }}" disabled>
+            <input type="hidden" name="redirectpage" id="redirectpage" value="{{ redirectpage }}" disabled>
+
+            <label class="custom-field disabled">
+                <div class="disabled-overlay"></div>
+                <input class="custom-input" type="text" id="username" value="{{ email }}" disabled />
+            </label>
+
+            <label class="custom-field">
+                <input class="custom-input" type="password" id="password" placeholder="&nbsp;"
+                    onkeyup="updatePasswordRequirements()" />
+                <span class="placeholder">Create Password</span>
+                <span class="border"></span>
+                <p id="password-visibility" onclick="togglePasswordVisibility()">SHOW</p>
+            </label>
+
+
+            <label class="custom-field">
+                <input class="custom-input" type="password" id="confirm_password" placeholder="&nbsp;"
+                    onkeyup="updatePasswordRequirements()" />
+                <span class="placeholder">Confirm Password</span>
+                <span class="border"></span>
+            </label>
+
+            <br>
+
+            <div id="password-requirements">
+                <div class="requirement" id="has-letter" class="invalid">
+                    <span></span>
+                    <p>One lowercase letter</p>
+                </div>
+
+                <div class="requirement" id="has-capital" class="invalid">
+                    <span></span>
+                    <p>One uppercase letter</p>
+                </div>
+
+                <div class="requirement" id="has-number" class="invalid">
+                    <span></span>
+                    <p>One number</p>
+                </div>
+
+                <div class="requirement" id="has-special" class="invalid">
+                    <span></span>
+                    <p>One special character</p>
+                </div>
+
+                <div class="requirement" id="has-length" class="invalid">
+                    <span></span>
+                    <p>8 characters minimum</p>
+                </div>
+            </div>
+
+            <input id="submit-button" value="Create Account" type="button" onclick="submitform()">
+            <!-- Specify type="button" to prevent form submission -->
+
+        </div>
     </form>
+
+
 
     <ul class="notifications">
         <!-- li toast -->

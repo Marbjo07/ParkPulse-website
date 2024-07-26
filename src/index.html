@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="src/map/map.css" type="text/css">
     <link rel="stylesheet" href="src/notifications/notifications.css" type="text/css">
     <link rel="stylesheet" href="src/style.css" type="text/css">
+    <link rel="stylesheet" href="src/popup/popup.css" type="text/css">
 
 
     <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
@@ -24,19 +25,39 @@
 
     <script src="src/map/map.js"></script>
     <script src="src/notifications/notifications.js"></script>
+    <script src="src/popup/popup.js"></script>
 
 </head>
 
 <body>
 
-    <form class="login-popup" id="login-popup">
-        <h2>Login</h2>
-        <label for="email">Email:</label> <input type="text" id="email" autocomplete="email"><br><br>
-        <label for="password">Password:</label> <input type="password" id="password"
-            autocomplete="current-password"><br><br>
+    <form class="popup" id="login-popup">
+        <div class="popup-header">
+            <h1 class="popup-title">Login</h1>
+        </div>
 
-        <button type="button" id="login-button" onclick="login()">Login</button>
-        <!-- Specify type="button" to prevent form submission -->
+        <div class="popup-body">
+            <label class="custom-field">
+                <input class="custom-input" type="text" id="email" placeholder="&nbsp;"
+                    autocomplete="email"/>
+                <span class="placeholder">Enter Email</span>
+                <span class="border"></span>
+            </label>
+
+
+            <label class="custom-field">
+                <input class="custom-input" type="password" id="password" placeholder="&nbsp;"
+                    autocomplete="current-password"/>
+                <span class="placeholder">Enter Password</span>
+                <span class="border"></span>
+                <p id="password-visibility" onclick="togglePasswordVisibility()">SHOW</p>
+            </label>
+            <p id="forgot-password" onclick="forgotPassword()">Forgot password?</p>
+            <br>
+
+            <button id="submit-button" type="button" onclick="login()">Login</button>
+            <!-- Specify type="button" to prevent form submission -->
+        </div>
     </form>
 
     <div id="control-panel">
@@ -57,25 +78,25 @@
                 <div class="toggle-container">
                     <div class="dropdown-element">Residential</div>
                     <div class="button r toggle-button">
-                        <input type="checkbox" class="checkbox" id="residential-filter" onclick="toggleResidential()"/>
+                        <input type="checkbox" class="checkbox" id="residential-filter" onclick="toggleResidential()" />
                         <div class="knobs"></div>
                         <div class="layer"></div>
                     </div>
                 </div>
-                
+
                 <div class="toggle-container">
                     <div class="dropdown-element">Commercial</div>
                     <div class="button r toggle-button">
-                        <input type="checkbox" class="checkbox" id="commercial-filter" onclick="toggleCommercial()"/>
+                        <input type="checkbox" class="checkbox" id="commercial-filter" onclick="toggleCommercial()" />
                         <div class="knobs"></div>
                         <div class="layer"></div>
                     </div>
                 </div>
-                
+
                 <div class="toggle-container">
                     <div class="dropdown-element">Garages</div>
                     <div class="button r toggle-button">
-                        <input type="checkbox" class="checkbox" id="garage-filter" onclick="toggleGarages()"/>
+                        <input type="checkbox" class="checkbox" id="garage-filter" onclick="toggleGarages()" />
                         <div class="knobs"></div>
                         <div class="layer"></div>
                     </div>
@@ -111,6 +132,8 @@
     </div>
 
     <div id="map"></div>
+
+    <div id="background-image"></div>
 
 </body>
 

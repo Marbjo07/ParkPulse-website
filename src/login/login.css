@@ -1,14 +1,15 @@
-.login-popup {
-    position: absolute;
-    
+#login-popup{
     top: 50%;
-    left: 50%;
-  
     transform: translate(-50%, -50%);
-  
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    z-index: 100;/* Ensure popup is above other elements */
+}
+
+#forgot-password {
+    font-size: 12px;
+    color: var(--base-color);
+    width: max-content;
+}
+
+#forgot-password:hover {
+    color: rgb(0, 0, 0);
+    font-weight: bold;
 }

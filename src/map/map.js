@@ -107,7 +107,7 @@ async function getAzureKeyForCity(cityName) {
     return azureKey;
 }
 
-async function initMap(currentCity) {
+async function initMap(currentCity, afterInitDone) {
     // disabled after custom tiler is loaded
     enableLoadingAnimation();
     let azureKey = await getAzureKeyForCity(currentCity);
@@ -116,11 +116,11 @@ async function initMap(currentCity) {
     
         map = new atlas.Map('map', {
             center: coords,
-            zoom: 15,
+            zoom: 16,
             view: 'Auto',
             style: 'satellite',
             maxBounds: cityCoordBoundsMap[currentCity],
-            maxZoom: 19,
+            maxZoom: 18,
             minZoom: 10,
             authOptions: {
                 authType: 'subscriptionKey',
@@ -139,6 +139,7 @@ async function initMap(currentCity) {
     map.events.add('ready', async () => {
         initCustomMapTiler(currentCity, displayResidential, displayCommercial, displayGarages);
         map.events.add('click', (event) => {mapClickEvent(event, azureKey)});
+        afterInitDone();
     });
     // disable loading animation after finish loading 
     ['load', 'idle', 'dragend'].forEach((event) => {
@@ -154,8 +155,7 @@ async function initMap(currentCity) {
     })
     // Handle tile loading errors
     map.events.add('error', (e) => {
-        // Check for status code 419 "Session expired"
-        if (e.error && e.error.status == 419) {
+        if (e.error && e.error.status == 401) {
             // Delete map            
             const mapDiv = document.getElementById("map")
             mapDiv.remove();
@@ -163,7 +163,7 @@ async function initMap(currentCity) {
             // Show a litle message 💀
             const userMessage = document.createElement("h1");
             userMessage.id = "userMessage";
-            userMessage.textContent = "Session terminated, please login again";
+            userMessage.textContent = "Session expired, please login again";
             document.body.appendChild(userMessage);
         }
     });

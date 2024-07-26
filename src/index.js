@@ -1,8 +1,8 @@
 const DEFUALT_CITY = 'stockholm';
 
 const cityCoordMap = {
-    'stockholm': {lat: 59.368868, lng: 17.834327},
-    'munich': {lat:48.1508662, lng:11.5703644}
+    'stockholm': {lat: 59.379265, lng: 17.835524},
+    'munich': {lat:48.1508662, lng: 11.5703644}
 };
 
 const cityCoordBoundsMap = {
@@ -14,8 +14,8 @@ const cityCoordBoundsMap = {
 function displayWelcomeMessage() {
     const toastMessages = [
         "Welcome to beta testing!",
-        "Red marks residential cars.",
-        "Blue marks commercial cars.",
+        "Red marks residential parked cars.",
+        "Blue marks commercial parked cars.",
         "Green marks garages.",
         "Click to get the address.",
         "Click 'Help' to replay this message.",
@@ -41,13 +41,25 @@ function displayWelcomeMessage() {
     }, 4000);
 }
 
-
-async function initApp(azureKey) {
+function enableHelpButton() {
     const helpButton = document.getElementById('help-button');
     helpButton.style.visibility = 'visible';
+}
+
+function removeLoginBackgroundImage() {
+    const backgroundImage = document.getElementById('background-image');
+    backgroundImage.remove();
+}
+
+
+async function initApp() {
+
+    enableHelpButton()
 
     displayWelcomeMessage();
     await initControlPanel();
-    initMap(DEFUALT_CITY);
+
+    afterInit = removeLoginBackgroundImage;
+    initMap(DEFUALT_CITY, afterInit);
 
 }
