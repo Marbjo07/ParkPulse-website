@@ -74,16 +74,21 @@ async function login() {
 function forgotPassword() {
     const fields = readFormFields("login-popup");
 
-    const email = fields.email;
+    const email = fields.email.replace(/\s/g, '');
     console.log(email);
 
-    if (email == null) {
-        createToast("error", "Enter email first");
+    if (email == null || email == "") {
+        createToast("error", "Please enter email first.");
+        return;
     }
 
     // TODO: implement notification system to notify admin
-
     setTimeout(() => {
-        createToast("info", "You will receive an email within a couple hours");
+        createToast("info", "Coming soon..");
+        //createToast("info", "You will receive an email within a couple hours.");
     }, 1000);
+    setTimeout(() => {
+        createToast("info", "Want to create an account? Contact marius.bjorhei@gmail.com");
+    }, 3000);
+
 }
