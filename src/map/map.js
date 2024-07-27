@@ -30,6 +30,7 @@ function initCustomMapTiler(currentCity, displayResidential, displayCommercial, 
     customMapTilerLayer = new atlas.layer.TileLayer({
         tileUrl: getTileURL(currentCity, displayResidential, displayCommercial, displayGarages),
         tileSize: 256,
+        maxSourceZoom: 18,
         opacity: 0.5,
         saturation: 0.9,
         bounds: cityCoordBoundsMap[currentCity]
@@ -51,6 +52,7 @@ function addCustomMapTiler() {
 }
 
 function removeCustomMapTiler() {
+    console.log("removed tiler :>");
     map.layers.remove(customMapTilerLayer);
 }
 
@@ -151,6 +153,7 @@ async function initMap(currentCity, afterInitDone) {
     map.events.add('zoomend', (event) => {
         let currentZoomLevel = map.getCamera().zoom;
         let saturation = (currentZoomLevel > 16) ? 0.3 : 0.9; 
+        console.log(currentZoomLevel);
         customMapTilerLayer.setOptions({'saturation':saturation});
     })
     // Handle tile loading errors

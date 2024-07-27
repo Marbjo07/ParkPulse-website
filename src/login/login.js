@@ -30,17 +30,17 @@ async function login() {
         // Inform user login is processing
         createToast("info", "Login might take some time.");
         enableLoadingAnimation();
-        
+
         // Disable the login button to prevent multiple submissions
         document.getElementById("submit-button").disabled = true;
 
         // Send login request
         const response = await fetch(`${API_SERVER_LOCATION}/login`, {
             method: "POST",
-            headers: new Headers({ 'content-type': 'application/json'}),
+            headers: new Headers({ 'content-type': 'application/json' }),
             body: JSON.stringify(data),
         });
-        
+
         disableLoadingAnimation();
         if (response.ok) {
             // unpack response
@@ -53,7 +53,7 @@ async function login() {
 
             // Start app🥳
             initApp();
-        } else if (response.status == 401){
+        } else if (response.status == 401) {
             console.log("Authentication failed");
             createToast("error", "Authentication failed")
         } else {
@@ -70,25 +70,45 @@ async function login() {
 
 }
 
-// TODO: create a seperate page
-function forgotPassword() {
+function readAndValidatedEmail() {
     const fields = readFormFields("login-popup");
 
     const email = fields.email.replace(/\s/g, '');
     console.log(email);
 
     if (email == null || email == "") {
+        throw Error("empty email");
+    }
+    return email;
+}
+
+async function forgotPassword() {
+    let data = null;
+    try {
+        data = {
+            'username': readAndValidatedEmail()
+        };
+    }
+    catch (error) {
         createToast("error", "Please enter email first.");
         return;
     }
+    enableLoadingAnimation();
 
-    // TODO: implement notification system to notify admin
-    setTimeout(() => {
-        createToast("info", "Coming soon..");
-        //createToast("info", "You will receive an email within a couple hours.");
-    }, 1000);
-    setTimeout(() => {
-        createToast("info", "Want to create an account? Contact marius.bjorhei@gmail.com");
-    }, 3000);
+    try {
+        const response = await fetch(`${API_SERVER_LOCATION}/request_password_reset`, {
+            method: "POST",
+            headers: new Headers({ 'content-type': 'application/json' }),
+            body: JSON.stringify(data),
+        });
 
+        const responseData = await response.json();
+        console.log(responseData);
+
+        createToast("info", "You will receive an email within a couple hours.");
+    }
+    catch (error) {
+        createToast("error", "Unable to proccess request");
+    }
+    disableLoadingAnimation();
 }
