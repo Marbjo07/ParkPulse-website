@@ -1,5 +1,13 @@
 let $ = document;
 
+function enableLoadingAnimation() {
+    document.getElementById('spinner').style.visibility = "visible";
+}
+
+function disableLoadingAnimation() {
+    document.getElementById('spinner').style.visibility = "hidden";
+}   
+
 const toastDetails = {
 	timer: 5000,
 	"success": {

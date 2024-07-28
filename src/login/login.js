@@ -103,9 +103,9 @@ async function forgotPassword() {
         });
 
         const responseData = await response.json();
-        console.log(responseData);
+        console.log(responseData);  
 
-        createToast("info", "You will receive an email within a couple hours.");
+        createToast("success", 'If an account with that email exists, you will receive a password reset email shortly.');
     }
     catch (error) {
         createToast("error", "Unable to proccess request");

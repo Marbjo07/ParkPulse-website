@@ -15,6 +15,8 @@ function fulfillsAllPasswordRequirements() {
 }
 
 async function submitform() {
+    enableLoadingAnimation();
+
     // disable button for a short period
     const signupButton = document.getElementById('submit-button');
     signupButton.disabled = true;
@@ -46,10 +48,12 @@ async function submitform() {
 
     if (!response.ok) {
         createToast("error", "Link is invalid or expired, could not create account.");
+        disableLoadingAnimation();
     }
     else {
         createToast("success", "Account created. Redirecting to login page.")
         setTimeout(() => {
+            disableLoadingAnimation();
             window.location.replace(fields.redirectpage);
         }, 3000);
     }

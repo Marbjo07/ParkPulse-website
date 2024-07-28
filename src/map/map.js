@@ -17,13 +17,6 @@ function getTileURL(cityName, displayResidential, displayCommercial, displayGara
     return tileURL;
 }
 
-function enableLoadingAnimation() {
-    document.getElementById('spinner').style.visibility = "visible";
-}
-
-function disableLoadingAnimation() {
-    document.getElementById('spinner').style.visibility = "hidden";
-}   
 
 function initCustomMapTiler(currentCity, displayResidential, displayCommercial, displayGarages) {
     enableLoadingAnimation();
