@@ -1,24 +1,28 @@
-from flask import Flask, request, jsonify, render_template
-import json
-import requests
 from flask_cors import CORS
+from flask import Flask, request, jsonify, render_template
+
+import os
+import sys
+import json
+import signal
+import requests
+
 
 app = Flask(__name__, static_folder="src", template_folder='src')
 CORS(app) # This will enable CORS for all routes
 
-if app.debug:
+if os.environ['FLASK_ENV'] == "development":
     print("app running in debug")
-    API_SERVER_LOCATION = "http://127.0.0.1:5000"
-    WEB_SITE_LOCATION = "http://127.0.0.1:5500"
+
+    SITE_LOCATION = "http://localhost"
 else:
-    API_SERVER_LOCATION = "https://parkpulse-api.azurewebsites.net"
-    WEB_SITE_LOCATION = "https://parkpulse-web.azurewebsites.net"
+    SITE_LOCATION = "http://localhost"
 
 user_signup_token_dict = {}
 
 @app.route('/')
 def index():
-    return render_template("index.html", api_server_location=API_SERVER_LOCATION)
+    return render_template("index.html", api_server_location=SITE_LOCATION)
 
 
 @app.route('/signup')
@@ -28,7 +32,7 @@ def signup():
 
     user_signup_token_dict.update({username: token})
 
-    return render_template("signup/signup.html", token=token, email=username, serverlocation=API_SERVER_LOCATION, redirectpage=WEB_SITE_LOCATION)
+    return render_template("signup/signup.html", token=token, email=username, serverlocation=SITE_LOCATION, redirectpage=SITE_LOCATION)
 
 
 @app.route('/complete_user_setup', methods=["POST"])
@@ -53,4 +57,17 @@ def complete_user_setup():
         'token': token
     }))
 
-    response = requests.post(url=f'{API_SERVER_LOCATION}/finish_onboarding', json=data)
+    response = requests.post(url=f'{SITE_LOCATION}/finish_onboarding', json=data)
+
+
+
+def handle_sigterm(*args):
+    print("Received SIGTERM, shutting down gracefully...")
+    sys.exit(0)
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, handle_sigterm)
+    if os.environ['FLASK_ENV'] == 'production':
+        app.run(app)
+    else:
+        app.run(app, debug=True)

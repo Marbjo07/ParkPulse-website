@@ -61,16 +61,21 @@ function toggleGarages() {
 
 async function getAvailableCities() {
     const data = {
-        'username': username
+        'username': username,
+        'session_key': sessionKey
     };
+
+    console.log(data);
 
     const response = await fetch(`${API_SERVER_LOCATION}/list_available_cities`, {
         method: "POST",
         headers: new Headers({ 'content-type': 'application/json' }),
         body: JSON.stringify(data),
-    });
+    })
+
 
     const responseData = await response.json();
+    console.log(responseData);
     let availableCities = responseData['cities'];
 
     availableCities = [...new Set(availableCities)];

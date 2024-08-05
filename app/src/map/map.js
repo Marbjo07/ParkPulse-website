@@ -3,7 +3,7 @@ var customMapTilerLayer;
 
 function getTileURL(cityName, displayResidential, displayCommercial, displayGarages) {
     // create tileURL
-    let tileURL = `${API_SERVER_LOCATION}/${cityName}/img/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
+    let tileURL = `${API_SERVER_LOCATION}/tile/${cityName}/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
     // add filter flags
     if (!displayResidential) {
         tileURL += "&residential=False";
@@ -45,7 +45,6 @@ function addCustomMapTiler() {
 }
 
 function removeCustomMapTiler() {
-    console.log("removed tiler :>");
     map.layers.remove(customMapTilerLayer);
 }
 

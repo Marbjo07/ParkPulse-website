@@ -79,6 +79,8 @@ function readAndValidatedEmail() {
     if (email == null || email == "") {
         throw Error("empty email");
     }
+
+    if (email.not)
     return email;
 }
 
