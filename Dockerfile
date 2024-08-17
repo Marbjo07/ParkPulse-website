@@ -34,4 +34,4 @@ COPY gunicorn_config.py /app/gunicorn_config.py
 EXPOSE 5000
 ENV PYTHONPATH=/usr/src/app/app
 # Run the application.
-CMD ["gunicorn","-c", "gunicorn_config.py", "run:app"]
+CMD ["gunicorn","-c", "gunicorn_config.py", "app:app"]
