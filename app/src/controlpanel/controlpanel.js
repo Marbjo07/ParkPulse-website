@@ -67,7 +67,7 @@ async function getAvailableCities() {
 
     console.log(data);
 
-    const response = await fetch(`${API_SERVER_LOCATION}/list_available_cities`, {
+    const response = await fetch(`${API_SERVER_URL}/list_available_cities`, {
         method: "POST",
         headers: new Headers({ 'content-type': 'application/json' }),
         body: JSON.stringify(data),

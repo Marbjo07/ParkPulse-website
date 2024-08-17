@@ -35,7 +35,7 @@ async function login() {
         document.getElementById("submit-button").disabled = true;
 
         // Send login request
-        const response = await fetch(`${API_SERVER_LOCATION}/login`, {
+        const response = await fetch(`${API_SERVER_URL}/login`, {
             method: "POST",
             headers: new Headers({ 'content-type': 'application/json' }),
             body: JSON.stringify(data),
@@ -98,7 +98,7 @@ async function forgotPassword() {
     enableLoadingAnimation();
 
     try {
-        const response = await fetch(`${API_SERVER_LOCATION}/request_password_reset`, {
+        const response = await fetch(`${API_SERVER_URL}/request_password_reset`, {
             method: "POST",
             headers: new Headers({ 'content-type': 'application/json' }),
             body: JSON.stringify(data),

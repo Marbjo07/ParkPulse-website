@@ -14,15 +14,17 @@ CORS(app) # This will enable CORS for all routes
 if os.environ['FLASK_ENV'] == "development":
     print("app running in debug")
 
-    SITE_LOCATION = "http://localhost"
+    SITE_URL = "http://localhost:5000"
+    API_SERVER_URL = "http://localhost:5001"
 else:
-    SITE_LOCATION = "http://localhost"
+    SITE_URL = "https://parkpulse-web.azurewebsites.net"
+    API_SERVER_URL = "https://parkpulse-api.azurewebsites.net"
 
 user_signup_token_dict = {}
 
 @app.route('/')
 def index():
-    return render_template("index.html", api_server_location=SITE_LOCATION)
+    return render_template("index.html", api_server_url=API_SERVER_URL)
 
 
 @app.route('/signup')
@@ -32,7 +34,7 @@ def signup():
 
     user_signup_token_dict.update({username: token})
 
-    return render_template("signup/signup.html", token=token, email=username, serverlocation=SITE_LOCATION, redirectpage=SITE_LOCATION)
+    return render_template("signup/signup.html", token=token, email=username, site_url=SITE_URL, redirectpage=SITE_URL)
 
 
 @app.route('/complete_user_setup', methods=["POST"])
@@ -57,8 +59,7 @@ def complete_user_setup():
         'token': token
     }))
 
-    response = requests.post(url=f'{SITE_LOCATION}/finish_onboarding', json=data)
-
+    response = requests.post(url=f'{SITE_URL}/finish_onboarding', json=data)
 
 
 def handle_sigterm(*args):
