@@ -3,7 +3,7 @@ var customMapTilerLayer;
 
 function getTileURL(cityName, displayResidential, displayCommercial, displayGarages) {
     // create tileURL
-    let tileURL = `${API_SERVER_URL}/tile/${cityName}/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
+    let tileURL = `/tile/${cityName}/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
     // add filter flags
     if (!displayResidential) {
         tileURL += "&residential=False";
@@ -88,7 +88,7 @@ async function getAzureKeyForCity(cityName) {
         'session_key': sessionKey 
     };
 
-    const response = await fetch(`${API_SERVER_URL}/get_azure_key_for_city`, {
+    const response = await fetch(`/get_azure_key_for_city`, {
         method: "POST",
         headers: new Headers({ 'content-type': 'application/json' }),
         body: JSON.stringify(data),

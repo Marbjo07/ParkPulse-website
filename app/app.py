@@ -1,14 +1,5 @@
 from flask_cors import CORS
-from flask import Flask, request, jsonify, render_template
-
-import os
-import sys
-import json
-import signal
-import requests
-
-from flask_cors import CORS
-from flask import Flask, request, jsonify, send_file, Response
+from flask import Flask, request, jsonify, render_template, send_file, Response
 
 import io
 import os
@@ -26,6 +17,7 @@ from math import floor, ceil
 from typing import Tuple, Dict
 from werkzeug.utils import secure_filename
 from prometheus_client import Counter, generate_latest
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
@@ -37,11 +29,9 @@ CORS(app) # This will enable CORS for all routes
 
 if os.environ['FLASK_ENV'] == "development":
     SITE_URL = "http://localhost:5000"
-    API_SERVER_URL = "http://localhost:5000"
     ACCESS_MANAGER_URL = 'http://accessmanager:5000'
 else:
-    SITE_URL = "https://parkpulse-web.azurewebsites.net"
-    API_SERVER_URL = "https://parkpulse-web.azurewebsites.net"
+    SITE_URL = "https://parkpulse-web.azurewebsites.net/"
     ACCESS_MANAGER_URL = os.environ['ACCESS_MANAGER_URL']
 
 DEVELOPER = 'dev'
@@ -55,7 +45,6 @@ city_azure_key_dict:Dict[str, str] = {
     'munich': os.environ['AZURE_KEY_MUNICH'],
     DEVELOPER: os.environ['AZURE_KEY_DEV'],
 }
-
 
 citySearchAreaMap:Dict[str, list[Tuple[int, int]]] = {
     'stockholm':  [(144024, 76942), (144239, 77221)],  
@@ -469,7 +458,6 @@ def tile(city_name:str, filepath:str|os.PathLike):
     
     return send_file(file_path, mimetype='image/png')
 
-
 @app.route('/get_phone_number', methods=['GET'])
 def get_phone_number():
     chrome_options = Options()
@@ -486,7 +474,7 @@ def get_phone_number():
 
 @app.route('/')
 def index():
-    return render_template("index.html", api_server_url=API_SERVER_URL)
+    return render_template("index.html")
 
 
 @app.route('/signup')
@@ -496,9 +484,7 @@ def signup():
 
     user_signup_token_dict.update({username: token})
 
-    return render_template("signup/signup.html", token=token, email=username, site_url=SITE_URL, redirectpage=SITE_URL)
-
-
+    return render_template("signup/signup.html", token=token, email=username, redirectpage=SITE_URL)
 
 
 def handle_sigterm(*args):
