@@ -25,7 +25,7 @@ async function submitform() {
     }, 1000);
 
     if (!fulfillsAllPasswordRequirements()) {
-        createToast("error", "Password must fulfill criterions");
+        createToast("error", "Password must fulfill criteria");
         return;
     }
 
