@@ -80,7 +80,10 @@ function readAndValidatedEmail() {
         throw Error("empty email");
     }
 
-    if (email.not)
+    if (!email.includes("@") || !email.includes(".")) {
+        throw Error("invalid email");
+    }
+
     return email;
 }
 
@@ -92,7 +95,7 @@ async function forgotPassword() {
         };
     }
     catch (error) {
-        createToast("error", "Please enter email first.");
+        createToast("error", "Please enter a valid email address.");
         return;
     }
     enableLoadingAnimation();
@@ -107,10 +110,10 @@ async function forgotPassword() {
         const responseData = await response.json();
         console.log(responseData);  
 
-        createToast("success", 'If an account with that email exists, you will receive a password reset email shortly.');
+        createToast("success", 'Your request has been received. The password reset process is manual and may take some time. Thank you for your patience.');
     }
     catch (error) {
-        createToast("error", "Unable to proccess request");
+        createToast("error", "We encountered an issue processing your request. Please try again later.");
     }
     disableLoadingAnimation();
 }
