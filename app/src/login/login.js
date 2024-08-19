@@ -110,7 +110,7 @@ async function forgotPassword() {
         const responseData = await response.json();
         console.log(responseData);  
 
-        createToast("success", 'Your request has been received. The password reset process is manual and may take some time. Thank you for your patience.');
+        createToast("success", 'If an account with that email exists, you will receive a password reset email shortly.');
     }
     catch (error) {
         createToast("error", "We encountered an issue processing your request. Please try again later.");
