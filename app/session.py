@@ -8,7 +8,7 @@ from typing import Tuple, Dict
 if os.environ['FLASK_ENV'] == "development":
     ACCESS_MANAGER_URL = 'http://accessmanager:5000'
 else:
-    SITE_URL = "https://parkpulse-web.azurewebsites.net/"
+    ACCESS_MANAGER_URL = os.environ['ACCESS_MANAGER_URL']
 
 def post_request_access_manager(endpoint:str, request_body:dict[str, any]) -> any:
     assert endpoint.startswith('/')
