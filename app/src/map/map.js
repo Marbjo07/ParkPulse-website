@@ -57,7 +57,49 @@ function toggleCustomMapTiler() {
     }
 }
 
-function mapClickEvent(event, azureKey) {
+function beginBrfLoad() {
+    enableLoadingAnimation('brf');
+    const mapElement = document.getElementById('map');
+    mapElement.style.filter = 'blur(10px)';
+}
+
+function createBrfInfoBox(brfResponseBody, address) {
+    infoBox = document.getElementById('brf-info');
+    infoBox.style.visibility = "visible";
+
+    infoBoxContent = document.getElementById('brf-info-content');
+
+    infoBoxAddress = document.getElementById('brf-info-header-address');
+    infoBoxAddress.innerHTML = address;
+    console.log(address);  
+    
+    // remove previous children
+    infoBoxContent.innerHTML = '';
+    brfResponseBody['items'].forEach((searchHit) => {
+        console.log(searchHit);
+        let brfInfoLine = document.createElement('li');
+        brfInfoLine.innerHTML = searchHit['name'];
+        brfInfoLine.className = "brf-info-element";
+
+        infoBoxContent.appendChild(brfInfoLine);
+    })
+    console.log(map);
+}
+
+function closeBrfInfoBox() {
+    infoBox = document.getElementById('brf-info');
+    infoBox.style.visibility = "hidden";
+
+    infoBoxContent = document.getElementById('brf-info-content');
+    infoBoxContent.innerHTML = '';
+    
+    const mapElement = document.getElementById('map');
+    mapElement.style.filter = '';
+}
+
+
+async function mapClickEvent(event, azureKey) {
+    beginBrfLoad();
     var coordinates = event.position;
     var lat = coordinates[1];
     var lon = coordinates[0];
@@ -67,18 +109,41 @@ function mapClickEvent(event, azureKey) {
     var url = `https://atlas.microsoft.com/search/address/reverse/json?api-version=1.0&subscription-key=${azureKey}&query=${lat},${lon}`;
 
     // Make the API request and display 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.addresses && data.addresses.length > 0) {
-                var address = data.addresses[0].address;
-                createToast('info', `Address: ${address.freeformAddress}`)
-            } else {
-                createToast('error', 'No address found :/');
-                console.error('No address found');
-            }
-        })
-        .catch(error => console.error('Error:', error));
+    try {
+        const address_response = await fetch(url);
+        const address_response_data = await address_response.json();
+
+        if (!address_response_data.addresses || address_response_data.addresses.length == 0) {
+            createToast('error', 'No address found :/');
+            console.error('No address found');
+            disableLoadingAnimation('brf');
+            return;
+        } 
+
+        const address = address_response_data.addresses[0].address.freeformAddress;
+        
+        const brfRequestBody = {
+            'username': username,
+            'address': address,
+            'session_key': sessionKey 
+        };
+    
+        const brfResponse = await fetch(`/get_brf`, {
+            method: "POST",
+            headers: new Headers({ 'content-type': 'application/json' }),
+            body: JSON.stringify(brfRequestBody),
+        });
+
+        const brfResponseBody = await brfResponse.json();
+        console.log(brfResponseBody);
+
+        createBrfInfoBox(brfResponseBody, address);
+
+    } catch (error) {
+        createToast('error', 'An unexpected error occurred. Please report how/what happend.');
+        console.error('Error:', error);
+    }
+    disableLoadingAnimation('brf');
 };
 
 async function getAzureKeyForCity(cityName) {
@@ -132,7 +197,9 @@ async function initMap(currentCity, afterInitDone) {
     // Add custom map tiler and map click event
     map.events.add('ready', async () => {
         initCustomMapTiler(currentCity, displayResidential, displayCommercial, displayGarages);
-        map.events.add('click', (event) => {mapClickEvent(event, azureKey)});
+        map.events.add('click', (event) => {
+            mapClickEvent(event, azureKey);
+        });
         afterInitDone();
     });
     // disable loading animation after finish loading 
@@ -140,7 +207,7 @@ async function initMap(currentCity, afterInitDone) {
         map.events.add(event, disableLoadingAnimation);
     });
 
-    map.events.add('render', enableLoadingAnimation);
+    map.events.add('render', ()=>{enableLoadingAnimation()});
 
     map.events.add('zoomend', (event) => {
         let currentZoomLevel = map.getCamera().zoom;

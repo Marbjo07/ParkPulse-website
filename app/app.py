@@ -5,7 +5,6 @@ import io
 import os
 import sys
 import json
-import time
 import signal
 import hashlib
 import secrets
@@ -18,10 +17,8 @@ from typing import Tuple, Dict
 from werkzeug.utils import secure_filename
 from prometheus_client import Counter, generate_latest
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+from brf_name_finder import BRFNameFinder
+from session import Session, post_request_access_manager
 
 app = Flask(__name__, static_folder="src", template_folder='src')
 app.config['SECRET_KEY'] = secrets.token_hex(32)  
@@ -55,92 +52,8 @@ user_signup_token_dict = {}
 
 CORS(app)  # This will enable CORS for all routes
 
-class Session():
-    def __init__(self, username, has_sword):
-        self.username: str = username
-        
-        self.session_key:str = secrets.token_hex(32)
-        self.disabled:bool = False
-        
-        self.allowed_requests: Dict[str, list[str]] = {}
-        self.denied_requests: Dict[str, list[str]] = {}
-        
-        self.is_requesting_access = False
-        self.has_sword = has_sword
+brf_search_engine = BRFNameFinder(save_path='cache.json', load_cache=True)
 
-        self.request_log: list[Tuple[str, str]] = []
-
-    def get_key(self) -> Tuple[bool, str]:
-        return self.disabled, self.session_key
-    
-    def disable_session(self):
-        self.disabled = True
-        self.session_key = None
-        self.allowed_requests = None 
-        self.denied_requests = None
-
-    def save_request_results(self, request, request_authorized):
-        data_type, data_id = request
-
-        request_list = self.allowed_requests if request_authorized else self.denied_requests
-
-        if data_type not in request_list:
-            request_list[data_type] = []
-
-        request_list[data_type].append(data_id)
-
-    def is_allowed_access(self, request:Tuple[str, str]) -> bool:
-        if self.disabled:
-            return False
-        
-        data_type, data_id = request
-
-        # check if previously denied access
-        if data_type in self.denied_requests and data_id in self.denied_requests[data_type]:
-            return False
-
-        # check if request previously was authorized
-        if data_type in self.allowed_requests:
-            is_allowed = data_id in self.allowed_requests[data_type]
-            if is_allowed:
-                self.request_log.append(request)
-                return True
-        
-        if self.is_requesting_access:
-            while self.is_requesting_access:
-                time.sleep(1)
-            return self.is_allowed_access(request)
-
-
-        self.is_requesting_access = True
-
-        # ask accessmanager for authorization
-        request_authorized = authorize_request(self.username, request)
-        self.save_request_results(request, request_authorized)
-
-        self.is_requesting_access = False
-
-
-        if request_authorized:
-            self.request_log.append(request)
-            
-        return request_authorized
-    
-def post_request_access_manager(endpoint:str, request_body:dict[str, any]) -> any:
-    assert endpoint.startswith('/')
-
-    data = json.loads(json.dumps(request_body))
-    response = requests.post(url=f'{ACCESS_MANAGER_URL}{endpoint}', json=data)
-    response = response.json()
-    return response
-
-def authorize_request(username:str, request:Tuple[str, str]) -> bool:
-    request_body = {'username':username, 'request':request}
-    response = post_request_access_manager('/authorize_request', request_body)
-    if not response['authorized']:
-        return False
-    
-    return response['authorized']
         
 sessions: Dict[str, Session] = {}
 user_auth_hash_dict: Dict[str, str] = {} # a dictonary of username: auth_hash, used to verify that request are coming from access manager
@@ -297,7 +210,7 @@ def get_azure_key_for_city():
 
     # Handle disabled key
     if session_disabled:
-        return jsonify({'error': 'Session terminated, please login again.'}), 401
+        return jsonify({'error': 'Session terminated, please login again.'}), 419
 
     # Handle azure key not found
     azure_key = city_azure_key_dict.get(DEVELOPER) if user_session.has_sword else city_azure_key_dict.get(city_name)
@@ -458,19 +371,38 @@ def tile(city_name:str, filepath:str|os.PathLike):
     
     return send_file(file_path, mimetype='image/png')
 
-@app.route('/get_phone_number', methods=['GET'])
-def get_phone_number():
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Ensure GUI is off
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    
-    address = request.args.get("address")
-    address = "toppklockegränd 16573 hässelby"
+@app.route('/get_brf', methods=['POST'])
+def get_brf():
+    # Parse request body
+    data = request.json
+    if not has_all_required_fields(data, ['username', 'session_key', 'address']):
+        return jsonify({'error': 'Invalid request, must provide username, address and session_key'}), 400
 
+    address = data['address']
     print(address)
+    username = data['username']
+    user_submit_session_key = data['session_key']
 
-    return address
+    # Handle user not found
+    user_session = sessions.get(username)
+    if user_session is None:
+        return jsonify({'error': 'User is not logged in'}), 401
+    
+    # Validate user session
+    session_disabled, session_key = user_session.get_key()
+    if user_submit_session_key != session_key:
+        return jsonify({'error': 'Authentication failed'}), 401
+
+    # Handle disabled key
+    if session_disabled:
+        return jsonify({'error': 'Session terminated, please login again.'}), 419
+
+    response = brf_search_engine.find_brf(address)
+    if response == None:
+        response = jsonify({ "items": [ {"name": "Unable to find anything here"} ] })
+    print(response)
+
+    return response
 
 @app.route('/')
 def index():
@@ -493,6 +425,9 @@ def handle_sigterm(*args):
 
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, handle_sigterm)
+    
+    BRFNameFinder.start_new_session()
+
     if os.environ['FLASK_ENV'] == 'production':
         app.run(app)
     else:

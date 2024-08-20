@@ -35,5 +35,5 @@ wsproto==1.2.0
 zope.event==5.0
 zope.interface==6.4.post2
 prometheus_client
-selenium
-webdriver_manager
+azure-storage-blob
+azure-identity

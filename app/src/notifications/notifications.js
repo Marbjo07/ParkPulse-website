@@ -1,12 +1,33 @@
 let $ = document;
 
-function enableLoadingAnimation() {
-    document.getElementById('spinner').style.visibility = "visible";
+let loading = [];
+
+function removeItemAll(arr, value) {
+	var i = 0;
+	while (i < arr.length) {
+		if (arr[i] === value) {
+			arr.splice(i, 1);
+		} else {
+			++i;
+		}
+	}
+	return arr;
 }
 
-function disableLoadingAnimation() {
-    document.getElementById('spinner').style.visibility = "hidden";
-}   
+function enableLoadingAnimation(name) {
+	if (name) {
+		loading.push(name);
+	}
+	document.getElementById('spinner').style.visibility = "visible";
+}
+
+function disableLoadingAnimation(name) {
+	loading = removeItemAll(loading, name);
+
+	if (loading.length == 0) {
+		document.getElementById('spinner').style.visibility = "hidden";
+	}
+}
 
 const toastDetails = {
 	timer: 5000,
