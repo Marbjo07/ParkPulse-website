@@ -53,6 +53,7 @@ class BRFNameFinder():
 
         self.use_azure_storage = os.getenv('USE_AZURE_STORAGE', 'False') == 'True'
         self.azure_blob_service_url = os.getenv('AZURE_BLOB_SERVICE_URL', '')
+        self.account_url = os.getenv('AZURE_ACCOUNT_URL', '')
         self.azure_container_name = os.getenv('AZURE_CONTAINER_NAME', '')
 
         if self.use_azure_storage:
@@ -60,7 +61,7 @@ class BRFNameFinder():
                 self.blob_service_client = BlobServiceClient(account_url=self.azure_blob_service_url)
             else:
                 credential = DefaultAzureCredential()
-                self.blob_service_client = BlobServiceClient(credential=credential)
+                self.blob_service_client = BlobServiceClient(account_url=self.account_url, credential=credential)
 
         self.session_creation_time = None
         
