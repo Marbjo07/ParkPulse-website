@@ -17,15 +17,11 @@ var sessionKey = null;
 var azureKey = null;
 
 async function login() {
-    const password = "passord";
+    const password = document.getElementById("password").value;
     const hashedPassword = await sha256(password);
 
-    //const data = {
-    //    username: document.getElementById("email").value,
-    //    password_hash: hashedPassword
-    //};
     const data = {
-        username: "marius.bjorhei@gmail.com",
+        username: document.getElementById("email").value,
         password_hash: hashedPassword
     };
     username = data.username;
@@ -92,13 +88,13 @@ function readAndValidatedEmail() {
 }
 
 async function forgotPassword() {
-    let data = null;   
+    let data = null;
     try {
         data = {
             'username': readAndValidatedEmail()
         };
     }
-    catch (error) { 
+    catch (error) {
         createToast("error", "Please enter a valid email address.");
         return;
     }
