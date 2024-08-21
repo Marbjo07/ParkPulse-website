@@ -398,7 +398,7 @@ def get_brf():
         return jsonify({'error': 'Session terminated, please login again.'}), 419
 
     response = brf_search_engine.find_brf(address)
-    if response == None:
+    if response == None or response['items'] == []:
         response = jsonify({ "items": [ {"name": "Unable to find anything here"} ] })
     print(response)
 
