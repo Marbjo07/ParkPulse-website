@@ -11,6 +11,7 @@
     align-content: center;
     box-shadow: none;
     font-weight: bold;
+    nav-index: 1;
 }
 
 
@@ -167,6 +168,13 @@
     margin-right: auto;
     width: max-content;
     color:white;
+}
+
+.popup-subtitle {
+    font-size: 14px;
+    color: #fff;
+    transform: translateY(-0.5em);
+    font-weight: bold;
 }
 
 .popup-body {

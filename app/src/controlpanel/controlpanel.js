@@ -62,7 +62,6 @@ function toggleGarages() {
 async function getAvailableCities() {
     const data = {
         'username': username,
-        'session_key': sessionKey
     };
 
     console.log(data);

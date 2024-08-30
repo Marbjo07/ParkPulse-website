@@ -3,7 +3,6 @@ import gc
 import argparse
 import urllib.request
 from time import sleep
-from zipfile import ZipFile
 from datetime import datetime
 
 # Custom print function with time tracking
@@ -23,7 +22,7 @@ args = vars(ap.parse_args())
 
 output_dir = args['output_dir']
 
-for city in ["munich", "stockholm"]:
+for city in ["munich", "stockholm", "gothenborg"]:
     # Create necessary directories
     pulse_tiles_dir = os.path.join(output_dir, 'pulse_tiles', city)
     zips_dir = os.path.join(output_dir, 'zips', city)

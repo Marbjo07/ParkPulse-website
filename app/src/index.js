@@ -2,13 +2,15 @@ const DEFUALT_CITY = 'stockholm';
 
 const cityCoordMap = {
     'stockholm': {lat: 59.379265, lng: 17.835524},
-    'munich': {lat:48.1508662, lng: 11.5703644}
+    'munich': {lat:48.1508662, lng: 11.5703644},
+    'gothenborg': {lat:57.708870, lng: 11.974560}
 };
 
 const cityCoordBoundsMap = {
     // min_lng, min_lat, max_lng, max_lat
     'stockholm': [17.505, 58.95, 18.395, 59.545],
-    'munich': [10.929, 47.794, 12.110, 48.508]
+    'munich': [10.929, 47.794, 12.110, 48.508],
+    'gothenborg': [11.0, 57, 12.5, 58.5]
 }
 
 function displayWelcomeMessage() {

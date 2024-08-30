@@ -3,7 +3,7 @@ var customMapTilerLayer;
 
 function getTileURL(cityName, displayResidential, displayCommercial, displayGarages) {
     // create tileURL
-    let tileURL = `/tile/${cityName}/{z}/img_{x}_{y}.png?username=${username}&session_key=${sessionKey}`;
+    let tileURL = `/tile/${cityName}/{z}/img_{x}_{y}.png?username=${username}`;
     // add filter flags
     if (!displayResidential) {
         tileURL += "&residential=False";
@@ -142,6 +142,7 @@ async function mapClickEvent(event, azureKey) {
     } catch (error) {
         createToast('error', 'An unexpected error occurred. Please report how/what happend.');
         console.error('Error:', error);
+        closeBrfInfoBox()
     }
     disableLoadingAnimation('brf');
 };

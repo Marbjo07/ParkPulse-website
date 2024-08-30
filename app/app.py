@@ -1,9 +1,10 @@
 from flask_cors import CORS
-from flask import Flask, request, jsonify, render_template, send_file, Response
+from flask import Flask, request, jsonify, render_template, send_file, Response, make_response
 
 import io
 import os
 import sys
+import math
 import json
 import signal
 import hashlib
@@ -15,8 +16,7 @@ from PIL import Image
 from math import floor, ceil 
 from typing import Tuple, Dict
 from werkzeug.utils import secure_filename
-from prometheus_client import Counter, generate_latest
-
+from prometheus_flask_exporter import PrometheusMetrics
 from brf_name_finder import BRFNameFinder
 from session import Session, post_request_access_manager
 
@@ -34,29 +34,39 @@ else:
 DEVELOPER = 'dev'
 PATH_TO_IMAGE_TILES = os.environ['PATH_TO_IMAGE_TILES']
 
-USER_REQUEST_COUNTER = Counter('total_request_per_user', 'Total number of tile requests for each user ', ['user'])
-TILE_REQUEST_COUNTER = Counter('tile_requests_total', 'Total number of requests to the endpoint', ['tile'])
-
 city_azure_key_dict:Dict[str, str] = {
-    'stockholm': os.environ['AZURE_KEY_STOCKHOLM'],
-    'munich': os.environ['AZURE_KEY_MUNICH'],
+    'stockholm': os.environ['AZURE_KEY_SWEDEN'],
+    'munich': os.environ['AZURE_KEY_GERMANY'],
+    'gothenborg': os.environ['AZURE_KEY_SWEDEN'],
     DEVELOPER: os.environ['AZURE_KEY_DEV'],
 }
 
 citySearchAreaMap:Dict[str, list[Tuple[int, int]]] = {
     'stockholm':  [(144024, 76942), (144239, 77221)],  
-    'munich':  [(139376, 90800), (139608, 91056)]    
+    'munich':  [(139376, 90800), (139608, 91056)],  
+    'gothenborg':  [(139600, 79272), (139864, 79496)]    
 }
 
 user_signup_token_dict = {}
 
-CORS(app)  # This will enable CORS for all routes
-
 brf_search_engine = BRFNameFinder(save_path='cache.json', load_cache=True)
-
         
 sessions: Dict[str, Session] = {}
 user_auth_hash_dict: Dict[str, str] = {} # a dictonary of username: auth_hash, used to verify that request are coming from access manager
+
+
+metrics = PrometheusMetrics(app)
+# Create a custom counter for the requested tiles
+
+user_tile_requests_total = metrics.counter(
+    'user_tile_requests_total', 'Total number of tile requests per user',
+    labels={'username': lambda: request.args.get("username")}
+)
+
+user_brf_requests_total = metrics.counter(
+    'user_brf_requests_total', 'Total number of brf requests per user',
+    labels={'username': lambda: request.args.get("username")}
+)
 
 def authenticate_user(username:str, password_hash:str) -> Tuple[bool, bool]:    
     request_body = {'username':username, 'password_hash':password_hash}
@@ -95,10 +105,13 @@ def login():
         else:
             sessions.update({username: new_session})
         
-        disabled, key = new_session.get_key()
+        disabled, session_key = new_session.get_key()
         assert disabled == False, "New session is invalid?"
+        
+        response = make_response("Logged in successfully")
+        response.set_cookie('session_key', session_key, httponly=True, secure=True, samesite='Strict')
 
-        return jsonify({'key': key}), 200   
+        return response 
     else:
         return jsonify({'message': 'Authentication failed'}), 401
 
@@ -108,7 +121,7 @@ def complete_user_setup():
     data = request.json
 
     if 'username' not in data or 'password_hash' not in data:
-        return jsonify({'error', 'Invalid request, must provide token, username and password_hash'}), 400
+        return jsonify({'error', 'Invalid request, must provide username and password_hash'}), 400
     
     username = data['username']
     password_hash = data['password_hash']
@@ -154,10 +167,9 @@ def disable_user_session():
 def list_available_cities():
     data = request.json
 
-    if not has_all_required_fields(data, ['username', 'session_key']):
+    if not has_all_required_fields(data, ['username']):
         return jsonify({'error': 'Invalid request, must provide username'}), 400
     
-
     # Handle user not found
     username = data['username']
     if username not in sessions:
@@ -165,7 +177,7 @@ def list_available_cities():
 
     
     # Verify session key
-    user_submitted_session_key = data['session_key']
+    user_submitted_session_key = request.cookies.get('session_key')
     user_session = sessions[username]
     
     session_disabled, valid_session_key = user_session.get_key()
@@ -191,12 +203,12 @@ def get_azure_key_for_city():
     data = request.json
 
     # Ensure that all fields are present
-    if not has_all_required_fields(data, ['username', 'city_name', 'session_key']):
-        return jsonify({'error': 'Invalid request, must provide username, city_name and session_key'}), 400
+    if not has_all_required_fields(data, ['username', 'city_name']):
+        return jsonify({'error': 'Invalid request, must provide username and city_name'}), 400
 
     username = data['username']
     city_name = data['city_name']
-    user_submit_session_key = data['session_key']
+    user_submit_session_key = request.cookies.get('session_key')
 
     # Handle user not found
     user_session = sessions.get(username)
@@ -219,6 +231,10 @@ def get_azure_key_for_city():
 
     return jsonify({'azure_key': azure_key})
 
+@app.route('/forgot-password-page')
+def forgot_password_page():
+    return render_template('/password-reset/request-password-reset.html')
+
 @app.route('/request_password_reset', methods=['POST'])
 def request_password_reset():
     data = request.json
@@ -235,8 +251,7 @@ def request_password_reset():
     
     return jsonify({'message': 'If an account with that email exists, you will receive a password reset email shortly.'}), 200
 
-
-allowed_extensions = {'png', 'jpg', 'jpeg'}
+allowed_extensions = {'png'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
@@ -308,11 +323,8 @@ def apply_filters(file_path:str|os.PathLike, disable_residential:bool, disable_g
 
     return img_io
 
-@app.route('/metrics')
-def metrics():
-    return Response(generate_latest(), mimetype='text/plain')
-
 @app.route('/tile/<string:city_name>/<path:filepath>', methods=['GET'])
+@user_tile_requests_total
 def tile(city_name:str, filepath:str|os.PathLike):   
     # Handle bad file paths and types
     filename = secure_filename(filepath)
@@ -328,7 +340,7 @@ def tile(city_name:str, filepath:str|os.PathLike):
     # Verify session key
     user_session = sessions[username]
     session_disabled, session_key = user_session.get_key()
-    if request.args.get('session_key', default="") != session_key:
+    if request.cookies.get('session_key') != session_key:
         return jsonify({'error': 'Authentication failed'}), 401
     
     # Handle disabled session
@@ -340,14 +352,12 @@ def tile(city_name:str, filepath:str|os.PathLike):
     if not user_session.is_allowed_access(user_request):
         return jsonify({'error': 'Unauthorized to access this resource'}), 403
     
-    
     # Check city exists e.g if server had a successful setup
     city_path = os.path.join(PATH_TO_IMAGE_TILES, city_name)
     if not os.path.isdir(city_path):
         print("User authorized to city that does not exist!!")
         return jsonify({'error': 'Unable to find resource'}), 500
     
-
     # Handle non existent file (outside or inside bounds)
     file_path = os.path.join(city_path, filename)
     if not os.path.exists(file_path):
@@ -356,9 +366,6 @@ def tile(city_name:str, filepath:str|os.PathLike):
         else:
             return send_file('unavailable.png', mimetype='image/png')
         
-    USER_REQUEST_COUNTER.labels(user=username).inc()
-    TILE_REQUEST_COUNTER.labels(tile=filename).inc()
-    
     # Check for filters
     disable_residential = request.args.get("residential") == "False"
     disable_garages = request.args.get("garages") == "False"
@@ -366,22 +373,29 @@ def tile(city_name:str, filepath:str|os.PathLike):
 
     # Apply filters
     if disable_residential or disable_garages or disable_commercial: 
-        img_io = apply_filters(file_path, disable_residential, disable_garages, disable_commercial)
-        return send_file(img_io, mimetype='image/png')
+        response_data = apply_filters(file_path, disable_residential, disable_garages, disable_commercial)
+    else:
+        response_data = file_path
+
+    response = make_response(send_file(response_data, mimetype='image/png'))
     
-    return send_file(file_path, mimetype='image/png')
+    response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+
+    return response
 
 @app.route('/get_brf', methods=['POST'])
+@user_brf_requests_total
 def get_brf():
     # Parse request body
     data = request.json
-    if not has_all_required_fields(data, ['username', 'session_key', 'address']):
-        return jsonify({'error': 'Invalid request, must provide username, address and session_key'}), 400
+    if not has_all_required_fields(data, ['username', 'address']):
+        return jsonify({'error': 'Invalid request, must provide username and address'}), 400
 
     address = data['address']
-    print(address)
     username = data['username']
-    user_submit_session_key = data['session_key']
+    user_submit_session_key = request.cookies.get('session_key')
+
+    print(address)
 
     # Handle user not found
     user_session = sessions.get(username)
@@ -397,7 +411,8 @@ def get_brf():
     if session_disabled:
         return jsonify({'error': 'Session terminated, please login again.'}), 419
 
-    response = brf_search_engine.find_brf(address)
+    response = None
+    #response = brf_search_engine.find_brf(address)
     if response == None or response['items'] == []:
         response = jsonify({ "items": [ {"name": "Unable to find anything here"} ] })
     print(response)
@@ -417,6 +432,15 @@ def signup():
     user_signup_token_dict.update({username: token})
 
     return render_template("signup/signup.html", token=token, email=username, redirectpage=SITE_URL)
+
+@app.route('/password-reset')
+def password_reset():
+    username = request.args.get("email")
+    token = request.args.get("token")
+
+    user_signup_token_dict.update({username: token})
+
+    return render_template("password-reset/reset-password.html", token=token, email=username, redirectpage=SITE_URL)
 
 
 def handle_sigterm(*args):

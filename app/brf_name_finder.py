@@ -181,7 +181,7 @@ class BRFNameFinder():
 
         # Create variations of query
         default_query = self.address_to_query(address)
-        query_variations = [default_query, default_query.replace('city', '')]
+        query_variations = [default_query, default_query.replace('city', ''), default_query.replace('gothenburg', 'göteborg')]
 
         new_query = default_query.split(" ")
         # Remove every word containing väg
@@ -194,10 +194,10 @@ class BRFNameFinder():
         if len(new_query.replace('city', '').replace('stockholm', '')) > 2:
             query_variations.append(new_query)
 
-        print(query_variations)
-
         query_variations = list(set(query_variations))
 
+        print(query_variations)
+        
         # Check for cache hits
         found_empty_results = False
         for variation in query_variations:

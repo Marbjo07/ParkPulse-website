@@ -14,7 +14,7 @@ function fulfillsAllPasswordRequirements() {
     return allFulfilled;
 }
 
-async function submitform() {
+async function submitform(success_message, error_message, formID) {
     enableLoadingAnimation();
 
     // disable button for a short period
@@ -26,13 +26,14 @@ async function submitform() {
 
     if (!fulfillsAllPasswordRequirements()) {
         createToast("error", "Password must fulfill criteria");
+        disableLoadingAnimation();
         return;
     }
 
-    let fields = readFormFields('signup-popup');
+    let fields = readFormFields(formID);
     if (fields.confirm_password != fields.password) {
-        console.log("balle");
-        createToast("error", "passwords must match");
+        createToast("error", "Passwords must match");
+        disableLoadingAnimation();
         return;
     }
 
@@ -47,11 +48,11 @@ async function submitform() {
     })
 
     if (!response.ok) {
-        createToast("error", "Link is invalid or expired, could not create account.");
+        createToast("error", error_message);
         disableLoadingAnimation();
     }
     else {
-        createToast("success", "Account created. Redirecting to login page.")
+        createToast("success", success_message)
         setTimeout(() => {
             disableLoadingAnimation();
             window.location.replace(fields.redirectpage);
@@ -70,7 +71,7 @@ function setRequirementState(element, isValid) {
     }
 }
 
-function updatePasswordRequirements() {
+function updatePasswordRequirements(formID) {
     let enteredPassword = document.getElementById("password");
 
     let tests = [
@@ -90,13 +91,14 @@ function updatePasswordRequirements() {
     const element = document.getElementById("has-length");
     setRequirementState(element, (enteredPassword.value.length >= MIN_PASSWORD_LENGTH));
 
-    updateArePasswordsEqualStatus();
+    updateArePasswordsEqualStatus(formID);
 }
 
-function updateArePasswordsEqualStatus() {
-    const fields = readFormFields('signup-popup');
+function updateArePasswordsEqualStatus(formID) {
+    const fields = readFormFields(formID);
 
     const confirm_password = document.getElementById("confirm_password");
+
     const isValid = fields.confirm_password == fields.password;
     setRequirementState(confirm_password, isValid);
 
