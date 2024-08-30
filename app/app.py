@@ -218,6 +218,9 @@ def get_azure_key_for_city():
 
 @app.route('/forgot-password-page')
 def forgot_password_page():
+    # ping access manager if it has gone to sleep, reduce wait time for user
+    threading.Thread(target=post_request_access_manager, args=("/ping", {})).start()
+
     return render_template('/password-reset/request-password-reset.html')
 
 @app.route('/request_password_reset', methods=['POST'])
@@ -394,8 +397,7 @@ def get_brf():
     if session_disabled:
         return jsonify({'error': 'Session terminated, please login again.'}), 419
 
-    response = None
-    #response = brf_search_engine.find_brf(address)
+    response = brf_search_engine.find_brf(address)
     if response == None or response['items'] == []:
         response = jsonify({ "items": [ {"name": "Unable to find anything here"} ] })
     print(response)
