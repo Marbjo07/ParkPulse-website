@@ -16,7 +16,6 @@ from PIL import Image
 from math import floor, ceil 
 from typing import Tuple, Dict
 from werkzeug.utils import secure_filename
-from prometheus_flask_exporter import PrometheusMetrics
 from brf_name_finder import BRFNameFinder
 from session import Session, post_request_access_manager
 
@@ -53,20 +52,6 @@ brf_search_engine = BRFNameFinder(save_path='cache.json', load_cache=True)
         
 sessions: Dict[str, Session] = {}
 user_auth_hash_dict: Dict[str, str] = {} # a dictonary of username: auth_hash, used to verify that request are coming from access manager
-
-
-metrics = PrometheusMetrics(app)
-# Create a custom counter for the requested tiles
-
-user_tile_requests_total = metrics.counter(
-    'user_tile_requests_total', 'Total number of tile requests per user',
-    labels={'username': lambda: request.args.get("username")}
-)
-
-user_brf_requests_total = metrics.counter(
-    'user_brf_requests_total', 'Total number of brf requests per user',
-    labels={'username': lambda: request.args.get("username")}
-)
 
 def authenticate_user(username:str, password_hash:str) -> Tuple[bool, bool]:    
     request_body = {'username':username, 'password_hash':password_hash}
@@ -324,7 +309,6 @@ def apply_filters(file_path:str|os.PathLike, disable_residential:bool, disable_g
     return img_io
 
 @app.route('/tile/<string:city_name>/<path:filepath>', methods=['GET'])
-@user_tile_requests_total
 def tile(city_name:str, filepath:str|os.PathLike):   
     # Handle bad file paths and types
     filename = secure_filename(filepath)
@@ -384,7 +368,6 @@ def tile(city_name:str, filepath:str|os.PathLike):
     return response
 
 @app.route('/get_brf', methods=['POST'])
-@user_brf_requests_total
 def get_brf():
     # Parse request body
     data = request.json

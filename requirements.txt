@@ -36,4 +36,3 @@ zope.event==5.0
 zope.interface==6.4.post2
 azure-storage-blob
 azure-identity
-prometheus_flask_exporter
