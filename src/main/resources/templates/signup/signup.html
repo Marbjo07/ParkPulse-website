@@ -6,24 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ParkPulse</title>
 
-    <link rel="stylesheet" href="/src/notifications/notifications.css" type="text/css">
-    <link rel="stylesheet" href="/src/style.css" type="text/css">
-    <link rel="stylesheet" href="/src/signup/signup.css" type="text/css">
-    <link rel="stylesheet" href="/src/popup/popup.css" type="text/css">
+    <link rel="stylesheet" href="/static/notifications/notifications.css" type="text/css">
+    <link rel="stylesheet" href="/static/style.css" type="text/css">
+    <link rel="stylesheet" href="/static/signup/signup.css" type="text/css">
+    <link rel="stylesheet" href="/static/popup/popup.css" type="text/css">
 
-    <script src="/src/notifications/notifications.js"></script>
-    <script src="/src/signup/signup.js"></script>
-    <script src="/src/popup/popup.js"></script>
+    <script src="/static/notifications/notifications.js"></script>
+    <script src="/static/signup/signup.js"></script>
+    <script src="/static/popup/popup.js"></script>
 </head>
 
 <body>
 
-    <form class="popup" id="password-reset-popup">
+    <form class="popup" id="signup-popup">
         <div class="popup-header">
-            <h1 class="popup-title">Reset Your Password</h1>
+            <h1 class="popup-title">Setup Account</h1>
         </div>
 
-        <div class="popup-body">
+        <div class="popup-body" action="/complete_user_setup" method="post">
             <input type="hidden" name="token" id="token" value="{{ token }}" disabled>
             <input type="hidden" name="serverlocation" id="serverlocation" value="{{ serverlocation }}" disabled>
             <input type="hidden" name="redirectpage" id="redirectpage" value="{{ redirectpage }}" disabled>
@@ -35,8 +35,8 @@
 
             <label class="custom-field">
                 <input class="custom-input" type="password" id="password" placeholder="&nbsp;"
-                    onkeyup="updatePasswordRequirements('password-reset-popup')" />
-                <span class="placeholder">Create New Password</span>
+                    onkeyup="updatePasswordRequirements('signup-popup')" />
+                <span class="placeholder">Create Password</span>
                 <span class="border"></span>
                 <p id="password-visibility" onclick="togglePasswordVisibility()">SHOW</p>
             </label>
@@ -44,8 +44,8 @@
 
             <label class="custom-field">
                 <input class="custom-input" type="password" id="confirm_password" placeholder="&nbsp;"
-                    onkeyup="updatePasswordRequirements('password-reset-popup')" />
-                <span class="placeholder">Confirm New Password</span>
+                    onkeyup="updatePasswordRequirements('signup-popup')" />
+                <span class="placeholder">Confirm Password</span>
                 <span class="border"></span>
             </label>
 
@@ -80,9 +80,9 @@
 
             <input id="submit-button" value="Reset Password" type="button" 
             onclick="submitform(
-                'Password reset successfully! Redirecting to login page...',
-                'This link is invalid or has expired. Please request a new password reset link.',
-                'password-reset-popup'
+                'Account created successfully! Redirecting to login page...',
+                'This link is invalid or has expired. Please request a new account creation link.',
+                'signup-popup'
             )">
             <!-- Specify type="button" to prevent form submission -->
 
