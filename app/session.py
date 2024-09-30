@@ -27,7 +27,7 @@ def authorize_request(username:str, request:Tuple[str, str]) -> bool:
     return response['authorized']
 
 class Session():
-    def __init__(self, username, has_sword):
+    def __init__(self, username, isDev):
         self.username: str = username
         
         self.session_key:str = secrets.token_hex(32)
@@ -37,7 +37,7 @@ class Session():
         self.denied_requests: Dict[str, list[str]] = {}
         
         self.is_requesting_access = False
-        self.has_sword = has_sword
+        self.isDev = isDev
 
         self.request_log: list[Tuple[str, str]] = []
 

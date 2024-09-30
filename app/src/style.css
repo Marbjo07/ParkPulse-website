@@ -83,6 +83,36 @@ p {
 
 }
 
+#free-period-message {
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    z-index: 2;
+    visibility: hidden;
+}
+
+/* Countdown styling */
+#free-period-countdown {
+    font-weight: bold;           /* Emphasize the countdown */
+    color: #d9534f;              /* Use a strong color like red to grab attention */
+    margin: 10px 0;
+}
+
+/* Note section styling */
+#free-period-note {
+    font-style: italic;          /* Italicize the note for distinction */
+    color: #666;                 /* Lighter color for the note text */
+    background-color: #f2f2f2;   /* Light background to highlight the note */
+    padding: 10px;
+    border-left: 4px solid #4caf50; /* A colored line on the left for emphasis */
+    margin-top: 15px;
+    border-radius: 4px;
+}
+
+
 #brf-info {
     visibility: hidden;
     position: absolute;
@@ -156,4 +186,3 @@ p {
     color: #292929;
     list-style: none;
 }
-

@@ -101,6 +101,9 @@ async function initControlPanel() {
     const controlPanelDiv = document.getElementById('control-panel');
     controlPanelDiv.style.pointerEvents = 'all';
 
+    const currentCityHeader = document.getElementById('current-city');
+    currentCityHeader.innerText = currentCity;
+
     ['residential-filter', 'commercial-filter', 'garage-filter'].forEach((filterName) => {
         console.log(`loading state of filter ${filterName}`);
         loadFilterState(filterName);
@@ -113,6 +116,19 @@ async function initControlPanel() {
 
     let availableCities = await getAvailableCities();
     console.log(availableCities);
+
+    if (availableCities.length <= 0) {
+        createToast("error", "We encountered an error. Unable to load city map");
+        return;
+    }
+
+    if (!availableCities.includes(currentCity)) {
+        currentCity = availableCities[0];
+        document.getElementById('current-city').innerText = currentCity;
+    }
+
+
+    
     populateCityMenu(availableCities);
 
     addEvenListnerToDropdownElements('city-menu', async (element) => {

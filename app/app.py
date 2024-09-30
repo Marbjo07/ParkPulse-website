@@ -37,13 +37,15 @@ city_azure_key_dict:Dict[str, str] = {
     'stockholm': os.environ['AZURE_KEY_SWEDEN'],
     'munich': os.environ['AZURE_KEY_GERMANY'],
     'gothenborg': os.environ['AZURE_KEY_SWEDEN'],
+    'malmo': os.environ['AZURE_KEY_SWEDEN'],
     DEVELOPER: os.environ['AZURE_KEY_DEV'],
 }
 
 citySearchAreaMap:Dict[str, list[Tuple[int, int]]] = {
-    'stockholm':  [(144024, 76942), (144239, 77221)],  
-    'munich':  [(139376, 90800), (139608, 91056)],  
-    'gothenborg':  [(139600, 79272), (139864, 79496)]    
+    'stockholm':    [(144024, 76942), (144239, 77221)],  
+    'munich':       [(139376, 90800), (139608, 91056)],  
+    'gothenborg':   [(139600, 79272), (139864, 79496)],
+    'malmo':        [(140456, 82096), (140640, 82272)],
 }
 
 user_signup_token_dict = {}
@@ -54,21 +56,20 @@ sessions: Dict[str, Session] = {}
 user_auth_hash_dict: Dict[str, str] = {} # a dictonary of username: auth_hash, used to verify that request are coming from access manager
 
 def authenticate_user(username:str, password_hash:str) -> Tuple[bool, bool]:    
-    request_body = {'username':username, 'password_hash':password_hash}
+    request_body = {'username':username, 'passwordHash':password_hash}
     response = post_request_access_manager('/authenticate_user', request_body)
 
     if not response['authenticated']:
         return False, False
     
-    assert has_all_required_fields(response, ['has_sword', 'auth_hash'])
+    assert has_all_required_fields(response, ['isDev', 'auth_hash'])
     
-    has_sword = response['has_sword']
+    isDev = response['isDev']
 
     # update user_auth_hash_dict
     user_auth_hash_dict[username] = response['auth_hash']
 
-    print("response:", response)
-    return True, has_sword
+    return True, isDev
 
 def has_all_required_fields(data_object:Dict[str, any], fields:list[str]) -> bool:
     return data_object and all(key in data_object for key in fields)
@@ -82,9 +83,9 @@ def login():
     username = data['username']
     password_hash = data['password_hash']
 
-    authenticated, has_sword = authenticate_user(username, password_hash)
+    authenticated, isDev = authenticate_user(username, password_hash)
     if authenticated:
-        new_session = Session(username, has_sword)
+        new_session = Session(username, isDev)
         if username in sessions:
             sessions[username] = new_session
         else:
@@ -118,11 +119,11 @@ def complete_user_setup():
 
     data = json.loads(json.dumps({
         'username':username, 
-        'password_hash':password_hash,
+        'passwordHash':password_hash,
         'token': token
     }))
 
-    response = requests.post(url=f'{ACCESS_MANAGER_URL}/finish_onboarding', json=request.json)
+    response = requests.post(url=f'{ACCESS_MANAGER_URL}/finish_onboarding', json=data)
     return jsonify({"response": response.text}), response.status_code 
 
 
@@ -210,7 +211,10 @@ def get_azure_key_for_city():
         return jsonify({'error': 'Session terminated, please login again.'}), 419
 
     # Handle azure key not found
-    azure_key = city_azure_key_dict.get(DEVELOPER) if user_session.has_sword else city_azure_key_dict.get(city_name)
+    if app.debug:
+        azure_key = city_azure_key_dict.get(DEVELOPER)
+    else:
+        azure_key = city_azure_key_dict.get(DEVELOPER) if user_session.isDev else city_azure_key_dict.get(city_name)
     if azure_key is None:
         return jsonify({'error': 'City does not exist'}), 404
 
