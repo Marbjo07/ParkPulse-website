@@ -19,10 +19,14 @@ repositories {
 }
 
 dependencies {
+	implementation("com.google.code.gson:gson:2.11.0")
+	implementation("com.squareup.okhttp3:okhttp:4.12.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+	implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

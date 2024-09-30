@@ -1,22 +1,22 @@
 package com.parkpulse.api
 
-import org.junit.jupiter.api.BeforeAll
+import jakarta.servlet.http.Cookie
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.hamcrest.Matchers.containsString
-import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
-@SpringBootTest()
+
+@SpringBootTest
 @AutoConfigureMockMvc
 class IntegrationTests {
 
@@ -49,7 +49,7 @@ class IntegrationTests {
     }
 
     @Test
-    fun `Assert empty login attempt`() {
+    fun `Assert empty login attempt fails`() {
         println(">> Assert empty login attempt fails")
 
         mockMvc.perform(
@@ -59,19 +59,125 @@ class IntegrationTests {
             .andReturn()
     }
 
-
     @Test
-    fun `Assert invalid login`() {
+    fun `Assert invalid login fails`() {
         println(">> Assert invalid login fails")
 
         mockMvc.perform(
             post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"username": "test", "password": "password"}""")
+                .content("""{"username": "test", "passwordHash": "password"}""")
         )
             .andExpect(status().isUnauthorized)
             .andReturn()
     }
+
+    @Test
+    fun `Assert valid login succeeds`() {
+        println(">> Assert valid login succeeds")
+
+        mockMvc.perform(
+            post("/login")
+                .contentType(MediaType.APPLICATION_JSON)
+
+                .content("""{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}""")
+        )
+            .andExpect(status().isOk)
+            .andReturn()
+    }
+
+    @Test
+    fun `Assert valid login returns secure cookie`() {
+        println(">> Assert valid login returns secure cookie")
+
+        mockMvc.perform(
+            post("/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}""")
+        )
+            .andExpect(status().isOk)
+            .andExpect(header().exists("Set-Cookie")) // Check if Set-Cookie is present
+            .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("SameSite=Strict"))) // Check if Set-Cookie contains SameSite=Strict
+            .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("HttpOnly"))) // Check if HttpOnly is present
+            .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("sessionKey"))) // Check if HttpOnly is present
+    }
+
+    @Test
+    fun `Assert endpoint cities returns all cities`() {
+        println(">> Assert endpoint cities returns all cities")
+
+        // First, perform a valid login to obtain the sessionKey cookie
+        val loginResult = mockMvc.perform(
+            post("/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}""")
+        )
+            .andExpect(status().isOk)
+            .andExpect(header().exists("Set-Cookie"))
+            .andReturn()
+
+        val sessionCookie = loginResult.response.getHeader("Set-Cookie")
+            ?.split(";")?.first { it.startsWith("sessionKey=") } // Extract sessionKey
+
+        val cookie = Cookie("sessionKey", sessionCookie?.removePrefix("sessionKey="))
+
+        // Use the sessionKey cookie for the cities request
+        mockMvc.perform(
+            post("/cities")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"username": "test"}""")
+                .cookie(cookie)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.cities").isArray)
+            .andExpect(jsonPath("$.cities[0]").exists())
+    }
+
+    @ParameterizedTest()
+    @ValueSource(strings = ["cities", "azure_key"])
+    fun `Assert endpoints denies unauthorized request`(endpointName:String) {
+        println(">> Assert list_available_cities denies unauthorized request")
+
+        mockMvc.perform(
+            post("/${endpointName}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"username": "test"}""")
+        )
+            .andExpect(status().isBadRequest) // Expect bad request if no valid token is provided
+    }
+
+    @Test
+    fun `Assert endpoint azure_key returns azure key`() {
+        println(">> Assert endpoint azure_key returns azure key")
+
+        // First, perform a valid login to obtain the sessionKey cookie
+        val loginResult = mockMvc.perform(
+            post("/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}""")
+        )
+            .andExpect(status().isOk)
+            .andExpect(header().exists("Set-Cookie"))
+            .andReturn()
+
+        val sessionCookie = loginResult.response.getHeader("Set-Cookie")
+            ?.split(";")?.first { it.startsWith("sessionKey=") } // Extract sessionKey
+
+        val cookie = Cookie("sessionKey", sessionCookie?.removePrefix("sessionKey="))
+
+        // Use the sessionKey cookie
+        mockMvc.perform(
+            post("/azure_key")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"username": "test", "city": "stockholm"}""")
+                .cookie(cookie)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.azure_key").exists()) // Check if the azureKey is present in the response
+    }
+
 
     @AfterAll
     fun teardown() {

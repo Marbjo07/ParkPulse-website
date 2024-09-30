@@ -22,7 +22,7 @@ async function login() {
 
     const data = {
         username: document.getElementById("email").value,
-        password_hash: hashedPassword
+        passwordHash: hashedPassword
     };
     username = data.username;
 

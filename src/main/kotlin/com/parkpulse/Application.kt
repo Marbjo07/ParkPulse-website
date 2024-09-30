@@ -1,4 +1,4 @@
-package com.parkpulse.api
+package com.parkpulse
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
