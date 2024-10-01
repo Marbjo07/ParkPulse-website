@@ -14,11 +14,11 @@ function fulfillsAllPasswordRequirements() {
     return allFulfilled;
 }
 
-async function submitform(success_message, error_message, formID) {
+async function signupSubmit(success_message, error_message, formID) {
     enableLoadingAnimation();
 
     // disable button for a short period
-    const signupButton = document.getElementById('submit-button');
+    const signupButton = document.getElementById('signup-submit-button');
     signupButton.disabled = true;
     setTimeout(function() {
         signupButton.disabled = false;

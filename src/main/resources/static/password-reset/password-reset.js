@@ -1,4 +1,3 @@
-
 function readAndValidatedEmail() {
     const fields = readFormFields('enter-email-popup');
     const email = fields.email.replace(/\s/g, '');

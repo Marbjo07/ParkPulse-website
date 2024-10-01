@@ -33,7 +33,7 @@
         <div class="popup-body">
             <label class="custom-field">
                 <input class="custom-input" type="text" id="email" placeholder="&nbsp;"
-                    autocomplete="email"/>
+                       autocomplete="email"/>
                 <span class="placeholder">Enter Email</span>
                 <span class="border"></span>
             </label>
@@ -41,7 +41,7 @@
 
             <label class="custom-field">
                 <input class="custom-input" type="password" id="password" placeholder="&nbsp;"
-                    autocomplete="current-password"/>
+                       autocomplete="current-password"/>
                 <span class="placeholder">Enter Password</span>
                 <span class="border"></span>
                 <p id="password-visibility" onclick="togglePasswordVisibility()">SHOW</p>
@@ -49,7 +49,7 @@
             <a id="forgot-password" href="/forgot-password-page">Forgot password?</a>
             <br>
 
-            <button id="submit-button" type="button" onclick="login()">Login</button>
+            <button class="submit-button" id="login-submit-button" type="button" onclick="login()">Login</button>
             <!-- Specify type="button" to prevent form submission -->
         </div>
     </form>
@@ -105,19 +105,32 @@
             </div>
         </div>
 
-        <h1 id="current-city">Stockholm</h1>
+        <h1 id="current-city"></h1>
 
         <div id="help-button" class="fancy-button" onclick="displayWelcomeMessage()">Help</div>
+    </div>
+
+    <div class="popup" id="free-period-message">
+        <div class="popup-header">
+            <h1>Malmö Free Trial</h1>
+        </div>
+        <div class="popup-body">
+            <h3 style="padding: 5px; margin-bottom: 0;">A portion of Malmö is available for free.</h3>
+            <p id="free-period-countdown">Time left: </p>
+            <p id="free-period-note">Note: After you purchase Malmö, the underlying model will be slightly improved, mainly differentiating between residential and commercial areas, and there will be improved accuracy for garages.</p>
+        </div>
+        <div id="free-period-submit-button" class="submit-button" onclick="closeFreePeriodPopup()">Understood</div>
+
     </div>
 
     <div id="brf-info">
         <div id="brf-info-header">
             <h2 id="brf-info-header-text">Possible Matches</h2>
             <p id="brf-info-header-address"></p>
-            <button id="submit-button" onclick="closeBrfInfoBox()">Close</button>
+            <button id="brf-submit-button" class="submit-button" onclick="closeBrfInfoBox()">Close</button>
         </div>
         <div>
-            <ul id="brf-info-content">
+            <ul id="brf-info-content"></ul>
         </div>
 
         </ul>

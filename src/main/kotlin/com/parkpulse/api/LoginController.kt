@@ -94,11 +94,13 @@ class LoginController {
 
          // List cities and return
          val availableCities = sessionManager.getCitiesForUser(userCredentials)
+         val citiesJson = availableCities.joinToString(prefix= "[", postfix = "]"){ "\"$it\""}
+
          logger.info("Successfully listed ${availableCities.size} number of cities for user ${usernameDTO.username}")
          return ResponseEntity
              .status(HttpStatus.OK)
              .header("Content-Type", "application/json")
-             .body("""{"cities":$availableCities}""")
+             .body("""{"cities":$citiesJson}""")
 
      }
 
@@ -129,12 +131,12 @@ class LoginController {
         }
 
         // Get azure key and return
-        val azureKey = "azure key"
+        val azureKey = "hmm"
         logger.info("Returning azure key to user \"${username}\" for city \"${azureKeyRequestDTO.city}\"")
         return ResponseEntity
             .status(HttpStatus.OK)
             .header("Content-Type", "application/json")
-            .body("""{"azure_key":${azureKey}}""")
+            .body("""{"azure_key":"$azureKey"}""")
 
     }
 

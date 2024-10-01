@@ -1,9 +1,9 @@
 var displayResidential = true;
 var displayCommercial = true;
 var displayGarages = true;
-var currentCity = DEFUALT_CITY;
+var currentCity = DEFAULT_CITY;
 
-function addEvenListnerToDropdownElements(dropdownMenuId, eventFunction) {
+function addEventListenerToDropdownElements(dropdownMenuId, eventFunction) {
     // Select elements
     let dropdownElements = document.getElementById(dropdownMenuId).querySelectorAll(".dropdown-element");
 
@@ -20,7 +20,7 @@ function loadFilterState(filterName) {
     if (checked == null) {
         checked = true;
     }
-    
+
     // state is inverted when shown?
     document.getElementById(filterName).checked = !checked;
 
@@ -66,7 +66,7 @@ async function getAvailableCities() {
 
     console.log(data);
 
-    const response = await fetch(`/list_available_cities`, {
+    const response = await fetch(`/cities`, {
         method: "POST",
         headers: new Headers({ 'content-type': 'application/json' }),
         body: JSON.stringify(data),
@@ -101,34 +101,54 @@ async function initControlPanel() {
     const controlPanelDiv = document.getElementById('control-panel');
     controlPanelDiv.style.pointerEvents = 'all';
 
+    // Update current city header
+    const currentCityHeader = document.getElementById('current-city');
+    currentCityHeader.innerText = currentCity;
+
+    // Load filter states from local storage
     ['residential-filter', 'commercial-filter', 'garage-filter'].forEach((filterName) => {
         console.log(`loading state of filter ${filterName}`);
         loadFilterState(filterName);
     })
 
-    addEvenListnerToDropdownElements('map-style-menu', (element) => {   
+    // Add Eventlisteners to map style menu
+    addEventListenerToDropdownElements('map-style-menu', (element) => {
         let selectedStyle = element.getAttribute("value");
         map.setStyle({ 'style': selectedStyle });
     });
 
+    // Get available cities for user
     let availableCities = await getAvailableCities();
     console.log(availableCities);
+
+    if (availableCities.length <= 0) {
+        createToast("error", "We encountered an error. Unable to load city map");
+        return;
+    }
+
+    // Update current city header if user does not have access to the the default city
+    if (!availableCities.includes(currentCity)) {
+        currentCity = availableCities[0];
+        document.getElementById('current-city').innerText = currentCity;
+    }
+
     populateCityMenu(availableCities);
 
-    addEvenListnerToDropdownElements('city-menu', async (element) => {
+    // Add eventlisteners to city menu elements
+    addEventListenerToDropdownElements('city-menu', async (element) => {
         // disabled after custom map tiler is done loading
         enableLoadingAnimation();
         let selectedCity = element.getAttribute("value");
 
-        afterInitDone = () => {
+        afterMapInitDone = () => {
             const currentCityHeader = document.getElementById('current-city')
             currentCityHeader.innerText = selectedCity;
 
             currentCity = selectedCity;
         };
 
-        initMap(selectedCity, afterInitDone);
+        initMap(selectedCity, afterMapInitDone);
 
-        
+
     });
 }

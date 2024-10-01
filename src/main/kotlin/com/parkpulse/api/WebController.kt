@@ -1,6 +1,7 @@
 package com.parkpulse.api
 
 import org.springframework.context.annotation.Configuration
+import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
@@ -11,5 +12,8 @@ class WebConfig : WebMvcConfigurer {
         // Serve static content only when prefixed with /static/
         registry.addResourceHandler("/static/**")
             .addResourceLocations("classpath:/static/")
+    }
+    override fun addCorsMappings(registry: CorsRegistry) {
+        registry.addMapping("/**")
     }
 }

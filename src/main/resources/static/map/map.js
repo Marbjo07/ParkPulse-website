@@ -150,11 +150,10 @@ async function mapClickEvent(event, azureKey) {
 async function getAzureKeyForCity(cityName) {
     const data = {
         'username': username,
-        'city_name': cityName,
-        'session_key': sessionKey 
+        'city': cityName,
     };
 
-    const response = await fetch(`/get_azure_key_for_city`, {
+    const response = await fetch(`/azure_key`, {
         method: "POST",
         headers: new Headers({ 'content-type': 'application/json' }),
         body: JSON.stringify(data),
@@ -223,7 +222,7 @@ async function initMap(currentCity, afterInitDone) {
             const mapDiv = document.getElementById("map")
             mapDiv.remove();
 
-            // Show a litle message 💀
+            // Show a little message 💀
             const userMessage = document.createElement("h1");
             userMessage.id = "userMessage";
             userMessage.textContent = "Session expired, please login again";

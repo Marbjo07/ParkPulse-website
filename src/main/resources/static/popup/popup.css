@@ -1,5 +1,5 @@
 
-#submit-button {
+.submit-button {
     background-color: var(--base-color);
     border-width: 0;
     border-radius: 20px;
@@ -9,13 +9,14 @@
     padding: 15px;
     margin: 10px;
     align-content: center;
+    text-align: center;
     box-shadow: none;
     font-weight: bold;
     nav-index: 1;
 }
 
 
-#submit-button:hover {
+.submit-button:hover {
     background-color: #146972;
 }
 

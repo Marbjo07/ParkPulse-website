@@ -22,7 +22,7 @@ async function login() {
 
     const data = {
         username: document.getElementById("email").value,
-        passwordHash: hashedPassword
+        passwordHash: hashedPassword    
     };
     username = data.username;
 
@@ -32,7 +32,7 @@ async function login() {
         enableLoadingAnimation();
 
         // Disable the login button to prevent multiple submissions
-        document.getElementById("submit-button").disabled = true;
+        document.getElementById("login-submit-button").disabled = true;
 
         // Send login request
         const response = await fetch(`/login`, {
@@ -60,7 +60,7 @@ async function login() {
         createToast("error", "Internal server error");
         disableLoadingAnimation();
     }
-    // Enable login button incase of unsuccessful login attempt
-    document.getElementById("submit-button").disabled = false;
+    // Enable login button in case of unsuccessful login attempt
+    document.getElementById("login-submit-button").disabled = false;
 
 }

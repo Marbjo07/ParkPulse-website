@@ -35,7 +35,7 @@
 
             <label class="custom-field">
                 <input class="custom-input" type="password" id="password" placeholder="&nbsp;"
-                    onkeyup="updatePasswordRequirements('signup-popup')" />
+                       onkeyup="updatePasswordRequirements('signup-popup')" />
                 <span class="placeholder">Create Password</span>
                 <span class="border"></span>
                 <p id="password-visibility" onclick="togglePasswordVisibility()">SHOW</p>
@@ -44,7 +44,7 @@
 
             <label class="custom-field">
                 <input class="custom-input" type="password" id="confirm_password" placeholder="&nbsp;"
-                    onkeyup="updatePasswordRequirements('signup-popup')" />
+                       onkeyup="updatePasswordRequirements('signup-popup')" />
                 <span class="placeholder">Confirm Password</span>
                 <span class="border"></span>
             </label>
@@ -56,34 +56,34 @@
                     <span></span>
                     <p>At least one lowercase letter</p>
                 </div>
-    
+
                 <div class="requirement" id="has-capital" class="invalid">
                     <span></span>
                     <p>At least one uppercase letter</p>
                 </div>
-    
+
                 <div class="requirement" id="has-number" class="invalid">
                     <span></span>
                     <p>At least one number</p>
                 </div>
-    
+
                 <div class="requirement" id="has-special" class="invalid">
                     <span></span>
                     <p>At least one special character (!@#$%^&*)</p>
                 </div>
-    
+
                 <div class="requirement" id="has-length" class="invalid">
                     <span></span>
                     <p>Minimum 8 characters</p>
                 </div>
             </div>
 
-            <input id="submit-button" value="Reset Password" type="button" 
-            onclick="submitform(
-                'Account created successfully! Redirecting to login page...',
-                'This link is invalid or has expired. Please request a new account creation link.',
-                'signup-popup'
-            )">
+            <input id="submit-button" value="Reset Password" type="button"
+                   onclick="submitform(
+                    'Account created successfully! Redirecting to login page...',
+                    'This link is invalid or has expired. Please request a new account creation link.',
+                    'signup-popup'
+                )">
             <!-- Specify type="button" to prevent form submission -->
 
         </div>
@@ -96,7 +96,7 @@
     </ul>
 
     <div id="spinner"></div>
-    
+
     <div id="signature">
         <p>Created by Marius Bjørhei</p>
         <p>Contact: marius.bjorhei@gmail.com</p>
