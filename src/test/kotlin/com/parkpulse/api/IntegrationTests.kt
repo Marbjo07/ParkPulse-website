@@ -23,6 +23,8 @@ class IntegrationTests {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    private val testUserJSONCredentials = """{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}"""
+
     @BeforeAll
     fun setup() {
         println(">> Setup")
@@ -80,7 +82,7 @@ class IntegrationTests {
             post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
 
-                .content("""{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}""")
+                .content(testUserJSONCredentials)
         )
             .andExpect(status().isOk)
             .andReturn()
@@ -93,7 +95,7 @@ class IntegrationTests {
         mockMvc.perform(
             post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}""")
+                .content(testUserJSONCredentials)
         )
             .andExpect(status().isOk)
             .andExpect(header().exists("Set-Cookie")) // Check if Set-Cookie is present
@@ -110,7 +112,7 @@ class IntegrationTests {
         val loginResult = mockMvc.perform(
             post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}""")
+                .content(testUserJSONCredentials)
         )
             .andExpect(status().isOk)
             .andExpect(header().exists("Set-Cookie"))
@@ -155,7 +157,7 @@ class IntegrationTests {
         val loginResult = mockMvc.perform(
             post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"username": "test", "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}""")
+                .content(testUserJSONCredentials)
         )
             .andExpect(status().isOk)
             .andExpect(header().exists("Set-Cookie"))

@@ -28,7 +28,6 @@ class SessionManagerImpl {
             }
             return false
         }
-        println(userCredentials.sessionKey)
         return userSession.isCorrectSessionKey(userCredentials.sessionKey)
     }
 

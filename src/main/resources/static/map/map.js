@@ -3,7 +3,7 @@ var customMapTilerLayer;
 
 function getTileURL(cityName, displayResidential, displayCommercial, displayGarages) {
     // create tileURL
-    let tileURL = `/tile/${cityName}/{z}/img_{x}_{y}.png?username=${username}`;
+    let tileURL = `/tile/${cityName}/{z}/{x}/{y}?username=${username}`;
     // add filter flags
     if (!displayResidential) {
         tileURL += "&residential=False";

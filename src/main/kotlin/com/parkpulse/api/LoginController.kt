@@ -14,14 +14,18 @@ import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
-
+import jakarta.validation.constraints.*
 
 data class UsernameDTO (
+    @NotBlank(message = "Username cannot be blank")
     val username: String
 )
 
 data class AzureKeyRequestDTO (
+    @NotBlank(message = "Username cannot be blank")
     val username: String,
+
+    @NotBlank(message = "City cannot be blank")
     val city: String
 )
 

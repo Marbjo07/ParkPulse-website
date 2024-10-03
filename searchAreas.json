@@ -1,0 +1,14 @@
+{
+  "stockholm": {
+    "minX": 144024, "minY": 76942, "maxX": 144239, "maxY": 77221
+  },
+  "munich": {
+    "minX": 139376,"maxX": 139608,"minY": 90800,"maxY": 91056
+  },
+  "gothenburg": {
+    "minX": 139600, "maxX": 139864, "minY": 79272, "maxY": 79496
+  },
+  "malmo": {
+    "minX": 140456, "maxX": 140640, "minY": 82096, "maxY": 82272
+  }
+}
