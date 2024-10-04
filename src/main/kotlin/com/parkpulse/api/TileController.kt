@@ -28,16 +28,16 @@ private enum class ErrorMessage(val message: String) {
 class CityNotFoundException(city: String) : RuntimeException("City $city not found")
 
 class ImageFilterFlags (
-    val residential: Boolean,
-    val garages: Boolean,
-    val commercial: Boolean
+    val includeResidential: Boolean,
+    val includeGarages: Boolean,
+    val includeCommercial: Boolean
 )
 
 @Controller
 class TileController {
     private val tileRootDir = "H:/imgs/pulse_tiles"
     private val searchAreaManager = SearchAreaManager("searchAreas.json")
-    private val logger: Logger = LoggerFactory.getLogger(TileController::class.java)
+    private val placeholderImages = setOf("blank.png", "unavailable.png")
 
     @GetMapping("/tile/{city}/{z}/{x}/{y}", produces = [MediaType.IMAGE_PNG_VALUE, MediaType.APPLICATION_JSON_VALUE])
     fun getTile(@PathVariable city: String,
@@ -52,17 +52,15 @@ class TileController {
 
                 @CookieValue("sessionKey") sessionKey: String
     ): ResponseEntity<Any> {
-        val time = System.currentTimeMillis()
-
         val userCredentials = UserCredentials(
             username=username,
             sessionKey=sessionKey
         )
 
         val imageFilterFlags = ImageFilterFlags(
-            residential=residential ?: true,
-            garages=garages ?: true,
-            commercial=commercial ?: true
+            includeResidential=residential ?: true,
+            includeGarages=garages ?: true,
+            includeCommercial=commercial ?: true
         )
 
         return when {
@@ -78,23 +76,11 @@ class TileController {
 
             // Return requested tile
             else -> {
-                val filePath = getImageFilePath(city, z, x, y)
-                val imageResponse = applyFilters(filePath, imageFilterFlags)
-
-                // Save the modified image to a ByteArrayOutputStream
-                val imgStream = ByteArrayOutputStream()
-                ImageIO.write(imageResponse, "PNG", imgStream)
-
-                val imageByteStream = imgStream.toByteArray()
-
-                logger.info(
-                    "URI {}: RESPONSE TIME {} ms ", (filePath),
-                    TimeUnit.MILLISECONDS.toMillis(System.currentTimeMillis() - time)
-                )
+                val tile = retrieveTile(city, x, y, z, imageFilterFlags)
 
                 ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_PNG)
-                    .body(imageByteStream)
+                    .body(tile.toByteArray())
             }
         }
 
@@ -110,51 +96,65 @@ class TileController {
         }
     }
 
+    fun retrieveTile(city: String, x: Int, y: Int, z: Int, imageFilterFlags: ImageFilterFlags): ByteArrayOutputStream {
+        // Read image and apply filters
+        val filePath = getImageFilePath(city, z, x, y)
+        var image: BufferedImage = ImageIO.read(filePath.toFile())
+            ?: throw IllegalArgumentException("Image not found at path: $filePath")
+
+        // Apply filter if not a placeholder image
+        if (!placeholderImages.contains(filePath.fileName.toString())) {
+            image = applyFilters(image, imageFilterFlags)
+        }
+
+        // Write the image to a stream
+        val imageStream = ByteArrayOutputStream()
+        ImageIO.write(image, "PNG", imageStream)
+
+        return imageStream
+    }
+
     fun applyFilters(
-        imagePath: Path,
+        image: BufferedImage,
         imageFilterFlags: ImageFilterFlags
     ): BufferedImage {
-        // Read the image file
-        val image: BufferedImage = ImageIO.read(imagePath.toFile())
-
-        // Return if no filters are applied
-        if (!(imageFilterFlags.residential || imageFilterFlags.garages || imageFilterFlags.commercial)) {
+        // Return if no filters are being applied
+        if (!(imageFilterFlags.includeResidential || imageFilterFlags.includeGarages || imageFilterFlags.includeCommercial)) {
             return image
         }
 
-        // Convert the image to an RGBA format
+        // Create an empty BufferedImage
         val newImage = BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB)
 
-        // Iterate through each pixel and apply the filters
-        // TODO: double nested loop with condition checks isn't good
-        // The 262,144 (256*256*4) conditional checks are hopefully optimized away, in some way
-        for (y in 0 until image.height) {
-            for (x in 0 until image.width) {
-                // Get the pixel color
-                val rgba = image.getRGB(x, y)
-
-                // Extract the red, green, blue, and alpha channels
-                val red = (rgba shr 16) and 0xFF
-                val green = (rgba shr 8) and 0xFF
-                val blue = rgba and 0xFF
-                val alpha = (rgba shr 24) and 0xFF
-
-                // Apply filters
-                val newRed = if (imageFilterFlags.residential) red else 0
-                val newGreen = if (imageFilterFlags.garages) green else 0
-                val newBlue = if (imageFilterFlags.commercial) blue else 0
-
-                // Determine the new alpha value
-                val newAlpha = if (newRed == 0 && newGreen == 0 && newBlue == 0) 0 else alpha
-
-                // Set the new pixel value in the new image
-                newImage.setRGB(x, y, (newAlpha shl 24) or (newRed shl 16) or (newGreen shl 8) or newBlue)
-            }
+        // Construct bit mask
+        // Each channel is two digits
+        // FF enables a channel
+        var mask = 0xFF000000.toInt()
+        if (imageFilterFlags.includeResidential) {
+            mask = mask or 0x00FF0000
         }
 
+        if (imageFilterFlags.includeGarages) {
+            mask = mask or 0x0000FF00
+        }
+
+        if (imageFilterFlags.includeCommercial) {
+            mask = mask or 0x000000FF
+        }
+
+        // Iterate through each pixel and apply the mask
+        for (y in 0 until image.height) {
+            for (x in 0 until image.width) {
+                val rgba = image.getRGB(x, y)
+
+                // Apply the mask to preserve only the enabled channels and zero out the rest
+                val filteredRgba = (rgba and mask)
+
+                // Set the pixel value
+                newImage.setRGB(x, y, filteredRgba)
+            }
+        }
         return newImage
-
-
     }
 
 }
