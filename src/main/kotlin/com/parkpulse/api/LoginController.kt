@@ -135,7 +135,8 @@ class LoginController {
         }
 
         // Get azure key and return
-        val azureKey = "hmm"
+        val azureKey: String? = System.getenv("AZURE_KEY_DEV")!!
+
         logger.info("Returning azure key to user \"${username}\" for city \"${azureKeyRequestDTO.city}\"")
         return ResponseEntity
             .status(HttpStatus.OK)
