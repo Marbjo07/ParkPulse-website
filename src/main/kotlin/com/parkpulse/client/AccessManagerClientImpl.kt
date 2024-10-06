@@ -1,5 +1,6 @@
 package com.parkpulse.client
 
+import com.parkpulse.api.UsernameDTO
 import com.parkpulse.sessionmanager.DataSource
 import com.parkpulse.sessionmanager.UserPermission
 import com.parkpulse.sessionmanager.UserLoginCredentials
@@ -9,6 +10,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 
+data class UserOnboardingDTO (
+    val username: String,
+    val passwordHash: String,
+    val token: String
+);
+
+data class ErrorSuccessMessageDTO (
+    val message: String?,
+    val error: String?,
+)
 
 
 class AccessManagerClientImpl(
@@ -34,13 +45,13 @@ class AccessManagerClientImpl(
                 )
             }
 
-            // Log if the authentication failed
             val userPermission = response.body!!
             if (!userPermission.authenticated) {
-                logger.warn("User ${userLoginCredentials.username} failed to authenticate with Access Manager")
+                // Log if the authentication failed
+                logger.warn("User \"${userLoginCredentials.username}\" failed to authenticate with Access Manager")
             } else {
                 // Log success if authentication passed
-                logger.info("User ${userLoginCredentials.username} authenticated successfully by Access Manager")
+                logger.info("User \"${userLoginCredentials.username}\" authenticated successfully by Access Manager")
             }
 
             return userPermission
@@ -53,6 +64,25 @@ class AccessManagerClientImpl(
                 allowedDataSource = emptyList<DataSource>()
             )
         }
+    }
+
+    override fun requestPasswordReset(usernameDTO: UsernameDTO)  {
+        val response = restTemplate.postForEntity("$baseUrl/request_password_reset", usernameDTO, ErrorSuccessMessageDTO::class.java)
+    }
+
+    override fun finishOnboarding(userLoginCredentials: UserLoginCredentials, token: String): String {
+        logger.info("Finishing onboarding for user \"${userLoginCredentials.username}\"")
+
+        val userOnboardingDTO = UserOnboardingDTO(
+            username = userLoginCredentials.username,
+            passwordHash = userLoginCredentials.passwordHash,
+            token = token,
+        )
+
+        val response = restTemplate.postForEntity("$baseUrl/finish_onboarding", userOnboardingDTO, ErrorSuccessMessageDTO::class.java)
+
+        val message = response.body?.message ?: response.body?.error
+        return message!!
     }
 
 

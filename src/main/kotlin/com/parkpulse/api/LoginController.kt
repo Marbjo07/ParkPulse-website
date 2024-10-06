@@ -10,11 +10,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.MediaType
 import org.springframework.http.HttpHeaders
-import org.springframework.web.bind.annotation.CookieValue
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
 import jakarta.validation.constraints.*
+import org.springframework.web.bind.annotation.*
 
 data class UsernameDTO (
     @NotBlank(message = "Username cannot be blank")
@@ -29,7 +26,6 @@ data class AzureKeyRequestDTO (
     val city: String
 )
 
-
 @RestController
 class LoginController {
 
@@ -39,7 +35,7 @@ class LoginController {
     fun login(
         @RequestBody userLoginCredentials: UserLoginCredentials,
         httpServletResponse: HttpServletResponse
-        ): ResponseEntity<String> {
+    ): ResponseEntity<String> {
         println("Login attempt with credentials: $userLoginCredentials")
 
         val userPermission: UserPermission = accessManagerClient.authenticate(userLoginCredentials)
@@ -67,7 +63,6 @@ class LoginController {
             "${cookie.name}=${cookie.value}; Max-Age=${cookie.maxAge}; Path=${cookie.path}; HttpOnly; SameSite=Strict"
         )
 
-        // Respond
         return ResponseEntity.ok("Logged in successfully")
 
     }
@@ -98,9 +93,10 @@ class LoginController {
 
          // List cities and return
          val availableCities = sessionManager.getCitiesForUser(userCredentials)
+         logger.info("Successfully listed ${availableCities.size} number of cities for user ${usernameDTO.username}")
+
          val citiesJson = availableCities.joinToString(prefix= "[", postfix = "]"){ "\"$it\""}
 
-         logger.info("Successfully listed ${availableCities.size} number of cities for user ${usernameDTO.username}")
          return ResponseEntity
              .status(HttpStatus.OK)
              .header("Content-Type", "application/json")
@@ -142,7 +138,17 @@ class LoginController {
             .status(HttpStatus.OK)
             .header("Content-Type", "application/json")
             .body("""{"azure_key":"$azureKey"}""")
+    }
 
+    @PostMapping("/disable_user_session")
+    fun disableUserSession(@RequestBody username: String, @RequestBody authStr: String): ResponseEntity<String> {
+
+        println(username)
+        println(authStr)
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .header("Content-Type", "application/json")
+            .body("""{"message": "Disabled user session successfully"}""")
     }
 
 }

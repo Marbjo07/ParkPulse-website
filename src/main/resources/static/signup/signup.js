@@ -37,14 +37,16 @@ async function signupSubmit(success_message, error_message, formID) {
         return;
     }
 
-    fields.password_hash = await sha256(fields.password);
-    delete fields.password;
+    let data = {
+        username: fields.username,
+        passwordHash: await sha256(fields.password)
+    }
 
     // Send setup request
-    const response = await fetch(`${fields.serverlocation}/complete_user_setup`, {
+    const response = await fetch(`/complete_user_setup`, {
         method: "POST",
         headers: new Headers({ 'content-type': 'application/json' }),
-        body: JSON.stringify(fields),
+        body: JSON.stringify(data),
     })
 
     if (!response.ok) {

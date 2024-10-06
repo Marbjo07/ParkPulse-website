@@ -32,5 +32,4 @@ function togglePasswordVisibility() {
 
     const passwordField = document.getElementById("password");
     passwordField.type = passwordVisible ? "text" : "password";
-
 }
