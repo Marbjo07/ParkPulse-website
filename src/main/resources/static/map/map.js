@@ -125,7 +125,6 @@ async function mapClickEvent(event, azureKey) {
         const brfRequestBody = {
             'username': username,
             'address': address,
-            'session_key': sessionKey 
         };
     
         const brfResponse = await fetch(`/get_brf`, {

@@ -1,5 +1,6 @@
 package com.parkpulse.api
 
+import com.parkpulse.client.ErrorSuccessMessageDTO
 import com.parkpulse.client.accessManagerClient
 import com.parkpulse.sessionmanager.*
 import jakarta.servlet.http.Cookie
@@ -11,11 +12,22 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.MediaType
 import org.springframework.http.HttpHeaders
 import jakarta.validation.constraints.*
+import okhttp3.internal.userAgent
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.RestTemplate
+import java.net.URLEncoder
 
 data class UsernameDTO (
     @NotBlank(message = "Username cannot be blank")
     val username: String
+)
+
+data class BRFRequestDTO (
+    @NotBlank(message = "Username cannot be blank")
+    val username: String,
+
+    @NotBlank(message = "Address cannot be blank")
+    val address: String
 )
 
 data class AzureKeyRequestDTO (
@@ -71,9 +83,8 @@ class LoginController {
      fun listAvailableCities(
          @RequestBody usernameDTO: UsernameDTO,
          @CookieValue("sessionKey") sessionKey: String,
-         httpServletResponse: HttpServletResponse
      ): ResponseEntity<String> {
-         logger.info("Listing cities for user ${usernameDTO.username}")
+         logger.info("Listing cities for user \"${usernameDTO.username}\"")
 
          // Construct user credentials
          val userCredentials = UserCredentials(
@@ -84,7 +95,7 @@ class LoginController {
          // Verify that a valid session was given
          val hasValidSession = sessionManager.checkValidSession(userCredentials);
          if (!hasValidSession) {
-             logger.error("Invalid session for user ${usernameDTO.username}} was passed to /cities")
+             logger.error("Invalid session for user \"${usernameDTO.username}\" was passed to /cities")
              return ResponseEntity
                  .status(HttpStatus.UNAUTHORIZED)
                  .header("Content-Type", "application/json")
@@ -109,7 +120,6 @@ class LoginController {
     fun getAzureKey(
         @RequestBody azureKeyRequestDTO: AzureKeyRequestDTO,
         @CookieValue("sessionKey") sessionKey: String,
-        httpServletResponse: HttpServletResponse
     ): ResponseEntity<String> {
         val username = azureKeyRequestDTO.username
         logger.info("User \"${username}\" requested azure key for city \"${azureKeyRequestDTO.city}\"")
@@ -142,14 +152,46 @@ class LoginController {
 
     @PostMapping("/disable_user_session")
     fun disableUserSession(@RequestBody username: String, @RequestBody authStr: String): ResponseEntity<String> {
+        // TODO: verify caller using authStr
+        sessionManager.disableUserSession(username)
 
-        println(username)
-        println(authStr)
         return ResponseEntity
             .status(HttpStatus.OK)
             .header("Content-Type", "application/json")
             .body("""{"message": "Disabled user session successfully"}""")
     }
 
+    @PostMapping("/get_brf")
+    fun getBrf(
+        @RequestBody brfRequestDTO: BRFRequestDTO,
+        @CookieValue("sessionKey") sessionKey: String,
+    ): ResponseEntity<String> {
+        logger.info("Finding brf for user \"${brfRequestDTO.username}\"")
+
+        // Construct user credentials
+        val userCredentials = UserCredentials(
+            username = brfRequestDTO.username,
+            sessionKey = sessionKey
+        )
+
+        // Verify that a valid session was given
+        val hasValidSession = sessionManager.checkValidSession(userCredentials);
+        if (!hasValidSession) {
+            logger.error("Invalid session for user \"${brfRequestDTO.username}\" was passed to /get_brf")
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .header("Content-Type", "application/json")
+                .body("""{"error":"invalid or expired session"}""")
+        }
+        val restTemplate = RestTemplate()
+
+        val response = restTemplate.getForEntity(
+            """http://localhost:5001/get_brf?address="${URLEncoder.encode(brfRequestDTO.address, "UTF-8")}"""",
+            String::class.java
+        )
+
+        println(response)
+        return response
+    }
 }
 
