@@ -47,11 +47,11 @@ The mission of this project found at the complete git repo
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 ## Getting Started
 
-**Note:** this server is dependent on the other servers to function properly. Follow the instructions at [ParkPulse](https://github.com/Marbjo07/ParkPulse) to get stated <br>
-It's also required to have a valid **Azure Map** APIkey
+**Note:** This server is dependent on the other reposetories to function properly. Follow the instructions at [ParkPulse](https://github.com/Marbjo07/ParkPulse) to get the full ✨experience✨.
+<br>
+It's also required to have a valid **Azure Map** API key
 
 ### 1. Clone the repository
 
@@ -63,8 +63,8 @@ cd ParkPulse-website
 ### 2. Define `.env` file
 
 ``` shell
-AZURE_KEY_DEV="..."
-SKIP_USER_AUTHENTICATION="True"
+AZURE_KEY_DEV=...
+SKIP_USER_AUTHENTICATION=true
 ```
 
 ### 3. Run the dev server
@@ -94,13 +94,13 @@ Then just press login, since authentication was disabled.
 <!-- BACKEND FEATURES -->
 ## Backend Features
 
-- BRF name finder engine ([BRF?](https://www.geringsladan.se/in-english/#:~:text=Brf%20Geringsl%C3%A5dan%20is%20short%20for,also%20information%20specific%20to%20Sweden))
+- Integrated with [BRF search engine](https://github.com/Marbjo07/BRF-Engine) ([BRF?](https://www.geringsladan.se/in-english/#:~:text=Brf%20Geringsl%C3%A5dan%20is%20short%20for,also%20information%20specific%20to%20Sweden))
 - User Authetication System using Sessions and [Access Manager](https://github.com/Marbjo07/ParkPulse-AccessManager)  
-- API Key System
+- API key retrieval
 - Dockerized
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+  
 
 <!-- CONTACT -->
 ## Contact
