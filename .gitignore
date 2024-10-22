@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-.gradle
-.idea
-.kotlin
-build
-=======
 HELP.md
 .gradle
 build/
+!build/libs/*.jar
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -45,6 +40,4 @@ out/
 ### Kotlin ###
 .kotlin
 
-
 .env
->>>>>>> migration/kotlin
