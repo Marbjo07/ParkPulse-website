@@ -55,71 +55,9 @@ function removeLoginBackgroundImage() {
     backgroundImage.remove();
 }
 
-// Declare the interval ID outside to access it globally
-var countdownInterval;
-
-function displayMalmoFreePeriodPopup() {
-    const freePeriodMessage = document.getElementById('free-period-message');
-    freePeriodMessage.style.visibility = 'visible';
-
-    const map = document.getElementById('map');
-    map.style.visibility = 'hidden';
-
-    // Set the date we're counting down to
-    var countDownDate = new Date("Oct 13, 2024 18:00:00").getTime();
-
-    // Clear any existing interval before setting a new one (to prevent multiple intervals)
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
-    }
-
-    // Update the count down every 1 second
-    countdownInterval = setInterval(function() {
-
-        // Get today's date and time
-        var now = new Date().getTime();
-
-        // Find the distance between now and the count down date
-        var distance = countDownDate - now;
-
-        // Time calculations for days, hours, minutes and seconds
-        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-        // Update the countdown display
-        document.getElementById("free-period-countdown").innerHTML = "Time left: " + days + "d " + hours + "h "
-        + minutes + "m " + seconds + "s ";
-
-        // If the countdown is finished, stop the interval and update the message
-        if (distance < 0) {
-            clearInterval(countdownInterval);
-            document.getElementById("free-period-countdown").innerHTML = "SHUTTING DOWN";
-        }
-    }, 1000);
-}
-
-function closeFreePeriodPopup() {
-    // Clear the countdown interval when the popup is closed
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
-    }
-
-    const freePeriodMessage = document.getElementById('free-period-message');
-    freePeriodMessage.remove();
-
-    const map = document.getElementById('map');
-    map.style.visibility = 'visible';
-
-}
-
-
 
 async function initApp() {
-
     enableHelpButton();
-    displayMalmoFreePeriodPopup();
 
     displayWelcomeMessage();
     await initControlPanel();

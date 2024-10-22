@@ -67,14 +67,20 @@ AZURE_KEY_DEV=...
 SKIP_USER_AUTHENTICATION=true
 ```
 
-### 3. Run the dev server
+### 3. Build project
+
+```shell
+./gradlew.bat build -x test
+```
+
+### 4. Run the dev server
 
 ```shell
 docker build -f Dockerfile -t parkpulse-web .
 docker run  --env-file=.env -p 8080:8080 -t parkpulse-web
 ```
 
-### 4. Open the app in your browser
+### 5. Open the app in your browser
 
 Visit [http://localhost:8080](http://localhost:8080) in your browser.
 Then just press login, since authentication was disabled.
@@ -100,7 +106,7 @@ Then just press login, since authentication was disabled.
 - Dockerized
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-  
+
 
 <!-- CONTACT -->
 ## Contact

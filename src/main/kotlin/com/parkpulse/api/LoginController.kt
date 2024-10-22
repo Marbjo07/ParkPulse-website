@@ -156,15 +156,22 @@ class LoginController {
         if (!isValidSession(username, sessionKey)) {
             return invalidSessionResponse(username, "/get_brf")
         }
+
         val restTemplate = RestTemplate()
 
         val encodedAddress = URLEncoder.encode(brfRequestDTO.address, "UTF-8")
-        val requestUrl = """$brfEngineLocation/get_brf?address="$encodedAddress""""
-        val response = restTemplate.getForEntity(requestUrl, String::class.java)
-
-        println(response)
+        val requestUrl = "$brfEngineLocation/get_brf?address=$encodedAddress" // Removed unnecessary quotes
+        val response = try {
+            restTemplate.getForEntity(requestUrl, String::class.java)
+        } catch (e: java.net.ConnectException) {
+            logger.error("Error while accessing the BRF service: ${e.message}")
+            return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("""{"error":"Unable to connect to the BRF service"}""")
+        }
         return response
     }
+
 
 
     // --- Utility Methods ---
