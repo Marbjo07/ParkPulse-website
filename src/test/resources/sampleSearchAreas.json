@@ -1,0 +1,14 @@
+{
+  "stockholm": {
+    "minX": 0,
+    "maxX": 100000,
+    "minY": 0,
+    "maxY": 700000
+  },
+  "gothenburg": {
+    "minX": 100001,
+    "maxX": 200000,
+    "minY": 700001,
+    "maxY": 1400000
+  }
+}
