@@ -47,4 +47,3 @@ tasks.withType<Test> {
 tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
 	environment(System.getenv())
 }
-

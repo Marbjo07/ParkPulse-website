@@ -35,7 +35,7 @@ class ImageFilterFlags (
 
 @Controller
 class TileController {
-    private val tileRootDir = "H:/imgs/pulse_tiles"
+    private val tileRootDir = "/overlay_tiles"
     private val searchAreaManager = SearchAreaManager("searchAreas.json")
     private val placeholderImages = setOf("blank.png", "unavailable.png")
 
@@ -88,10 +88,9 @@ class TileController {
     fun getImageFilePath(city: String, z: Int, x: Int, y: Int): Path {
         val imageFilename = "img_${x}_${y}.png"
         val fullImagePath = Paths.get(tileRootDir, city, z.toString(), imageFilename)
-
         return when {
-            !searchAreaManager.isInBounds(city, z, x, y) -> Paths.get("./src/main/resources/static/unavailable.png")
-            !Files.exists(fullImagePath) -> Paths.get("./src/main/resources/static/blank.png")
+            !searchAreaManager.isInBounds(city, z, x, y) -> Paths.get("./resources/static/unavailable.png")
+            !Files.exists(fullImagePath) -> Paths.get("./resources/static/blank.png")
             else -> fullImagePath
         }
     }
@@ -99,19 +98,25 @@ class TileController {
     fun retrieveTile(city: String, x: Int, y: Int, z: Int, imageFilterFlags: ImageFilterFlags): ByteArrayOutputStream {
         // Read image and apply filters
         val filePath = getImageFilePath(city, z, x, y)
-        var image: BufferedImage = ImageIO.read(filePath.toFile())
-            ?: throw IllegalArgumentException("Image not found at path: $filePath")
+        try {
+            var image: BufferedImage = ImageIO.read(filePath.toFile())
+                ?: throw IllegalArgumentException("Image not found at path: $filePath")
+        
+            // Apply filter if not a placeholder image
+            if (!placeholderImages.contains(filePath.fileName.toString())) {
+                image = applyFilters(image, imageFilterFlags)
+            }
 
-        // Apply filter if not a placeholder image
-        if (!placeholderImages.contains(filePath.fileName.toString())) {
-            image = applyFilters(image, imageFilterFlags)
+            // Write the image to a stream
+            val imageStream = ByteArrayOutputStream()
+            ImageIO.write(image, "PNG", imageStream)
+
+            return imageStream
         }
-
-        // Write the image to a stream
-        val imageStream = ByteArrayOutputStream()
-        ImageIO.write(image, "PNG", imageStream)
-
-        return imageStream
+        catch (e:javax.imageio.IIOException) {
+            println("Could not find file: {}".format(filePath))
+        }
+        return ByteArrayOutputStream()
     }
 
     fun applyFilters(

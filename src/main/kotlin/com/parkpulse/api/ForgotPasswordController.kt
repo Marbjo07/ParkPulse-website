@@ -2,13 +2,11 @@ package com.parkpulse.api
 
 import org.springframework.stereotype.Controller
 
-import com.parkpulse.api.UsernameDTO
-import com.parkpulse.client.AccessManagerClientImpl
 import com.parkpulse.client.accessManagerClient
 import com.parkpulse.sessionmanager.UserLoginCredentials
-import com.parkpulse.sessionmanager.sessionManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.ui.Model
@@ -22,6 +20,8 @@ class ForgotPasswordController {
     private val userSignupTokenMap = mutableMapOf<String, String>()
     private val logger: Logger = LoggerFactory.getLogger(ForgotPasswordController::class.java)
 
+    @Value("\${app.redirectpage}")
+    private lateinit var redirectPage: String
 
     @GetMapping("/forgot-password-page")
     fun forgotPasswordPage(): String {
@@ -49,7 +49,7 @@ class ForgotPasswordController {
         model.addAttribute("email", email)
         model.addAttribute("token", token)
         // TODO: update automatic for dev and prod
-        model.addAttribute("redirectpage", "http://localhost:8080")
+        model.addAttribute("redirectpage", redirectPage)
 
         userSignupTokenMap[email] = token
 
