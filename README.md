@@ -39,42 +39,62 @@ The mission of this project found at the complete git repo
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-### Built With
-
-Major frameworks and technologies used to bootstrap this project.
-
-* [![Python][Python-logo]][Python-url]
-* [![Flask][Flask-logo]][Flask-url]
-* [![JavaScript][JS-logo]][JS-url]
+## Tech Stack
+* [![Kotlin][Kotlin-logo]][Kotlin-url]
+* [![Spring Boot][Spring-logo]][Spring-url]
 * [![Docker][Docker-logo]][Docker-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- USAGE EXAMPLES -->
-## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+* [![JavaScript][JS-logo]][JS-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+## Getting Started
+
+**Note:** this server is dependent on the other servers to function properly. Follow the instructions at [ParkPulse](https://github.com/Marbjo07/ParkPulse) to get stated <br>
+It's also required to have a valid **Azure Map** APIkey
+
+### 1. Clone the repository
+
+```shell
+git clone https://github.com/Marbjo07/ParkPulse-website.git
+cd ParkPulse-website
+```
+
+### 2. Define `.env` file
+
+``` shell
+AZURE_KEY_DEV="..."
+SKIP_USER_AUTHENTICATION="True"
+```
+
+### 3. Run the dev server
+
+```shell
+docker build -f Dockerfile -t parkpulse-web .
+docker run  --env-file=.env -p 8080:8080 -t parkpulse-web
+```
+
+### 4. Open the app in your browser
+
+Visit [http://localhost:8080](http://localhost:8080) in your browser.
+Then just press login, since authentication was disabled.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- FRONTEND FEATURES -->
 ## Frontend Features
-
+  
 - Map Filters
 - Different Map Style for the base map
-- Automatic Password Reset Emails
-- Menu for jumping/switching between cities
+- Password Reset and Account Creation Flow
+- Multiple Cities
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- BACKEND FEATURES -->
 ## Backend Features
 
-- Session Manager 
-- BRF name finder engine
+- BRF name finder engine ([BRF?](https://www.geringsladan.se/in-english/#:~:text=Brf%20Geringsl%C3%A5dan%20is%20short%20for,also%20information%20specific%20to%20Sweden))
 - User Authetication System using Sessions and [Access Manager](https://github.com/Marbjo07/ParkPulse-AccessManager)  
 - API Key System
 - Dockerized
@@ -104,11 +124,21 @@ Project Link: [https://github.com/Marbjo07/ParkPulse-website](https://github.com
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/marius-b-12861a31b
 [product-screenshot]: images/screenshot.png
+
 [Python-logo]: https://img.shields.io/badge/Python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54
 [Python-url]: https://www.python.org/
+
 [Flask-logo]: https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white
 [Flask-url]: https://flask.palletsprojects.com/
+
 [JS-logo]: https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black
 [JS-url]: https://developer.mozilla.org/en-US/docs/Web/JavaScript
+
 [Docker-logo]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
 [Docker-url]: https://www.docker.com/
+
+[Kotlin-logo]: https://img.shields.io/badge/kotlin-%230095D5.svg?style=for-the-badge&logo=kotlin&logoColor=black
+[Kotlin-url]: https://kotlinlang.org/
+
+[Spring-logo]: https://img.shields.io/badge/springboot-%236DB33F.svg?style=for-the-badge&logo=springboot&logoColor=white
+[Spring-url]: https://spring.io/projects/spring-boot

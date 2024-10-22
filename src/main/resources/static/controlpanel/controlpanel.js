@@ -101,17 +101,11 @@ async function initControlPanel() {
     const controlPanelDiv = document.getElementById('control-panel');
     controlPanelDiv.style.pointerEvents = 'all';
 
-<<<<<<< HEAD:app/src/controlpanel/controlpanel.js
-    const currentCityHeader = document.getElementById('current-city');
-    currentCityHeader.innerText = currentCity;
-
-=======
     // Update current city header
     const currentCityHeader = document.getElementById('current-city');
     currentCityHeader.innerText = currentCity;
 
     // Load filter states from local storage
->>>>>>> migration/kotlin:src/main/resources/static/controlpanel/controlpanel.js
     ['residential-filter', 'commercial-filter', 'garage-filter'].forEach((filterName) => {
         console.log(`loading state of filter ${filterName}`);
         loadFilterState(filterName);
@@ -132,20 +126,12 @@ async function initControlPanel() {
         return;
     }
 
-<<<<<<< HEAD:app/src/controlpanel/controlpanel.js
-=======
     // Update current city header if user does not have access to the the default city
->>>>>>> migration/kotlin:src/main/resources/static/controlpanel/controlpanel.js
     if (!availableCities.includes(currentCity)) {
         currentCity = availableCities[0];
         document.getElementById('current-city').innerText = currentCity;
     }
 
-<<<<<<< HEAD:app/src/controlpanel/controlpanel.js
-
-    
-=======
->>>>>>> migration/kotlin:src/main/resources/static/controlpanel/controlpanel.js
     populateCityMenu(availableCities);
 
     // Add eventlisteners to city menu elements

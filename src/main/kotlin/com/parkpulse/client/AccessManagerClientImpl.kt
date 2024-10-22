@@ -27,10 +27,16 @@ class AccessManagerClientImpl(
     private val restTemplate: RestTemplate
 ) : AccessManagerClientInterface {
 
+    private val skipUserAuthentication: Boolean = System.getenv("SKIP_USER_AUTHENTICATION").toBoolean() ?: false
+
     private val logger: Logger = LoggerFactory.getLogger(AccessManagerClientImpl::class.java)
 
     override fun authenticate(userLoginCredentials: UserLoginCredentials): UserPermission {
         logger.info("Authenticating user ${userLoginCredentials.username} with Access Manager at $baseUrl")
+        
+        if (skipUserAuthentication) {
+            return createSuperUserPermission()
+        }
 
         try {
             val response = restTemplate.postForEntity("$baseUrl/authenticate_user", userLoginCredentials, UserPermission::class.java)
@@ -64,6 +70,17 @@ class AccessManagerClientImpl(
                 allowedDataSource = emptyList<DataSource>()
             )
         }
+    }
+
+    fun createSuperUserPermission(): UserPermission {
+        return UserPermission(
+            authenticated = true,
+            isDev = true,
+            allowedDataSource = listOf(DataSource(
+                dataType = "city",
+                dataId = listOf("malmo", "gothenburg", "stockholm", "munich"),
+            ))
+        ) 
     }
 
     override fun requestPasswordReset(usernameDTO: UsernameDTO)  {

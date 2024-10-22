@@ -60,11 +60,7 @@ async function login() {
         createToast("error", "Internal server error");
         disableLoadingAnimation();
     }
-<<<<<<< HEAD:app/src/login/login.js
-    // Enable login button incase of unsuccessful login attempt
-=======
     // Enable login button in case of unsuccessful login attempt
->>>>>>> migration/kotlin:src/main/resources/static/login/login.js
     document.getElementById("login-submit-button").disabled = false;
 
 }
