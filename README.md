@@ -93,41 +93,15 @@ Then just press login, since authentication was disabled.
 
 ### ParkPulse vs Plain map
 
-<!-- Foreground Image (Image 2) - initially covers half of the container -->
-<img src='images/showcase-without-overlay.png' style="position: absolute; z-index: -1; height:640px; padding:0; widht:100%">
+![video](./images/ParkPulse-vs-Plain-map.mp4)
 
-<div style=""> 
-    <div id="image-overlay" style="
-        height: 640px;
-        border-right: 2px dashed red;
-        overflow:hidden;
-        width: 500px;
-        background-image:url('images/showcase-with-overlay.png');
-        background-size: cover;" alt="Image 2">
-    </div>
-</div>
-<input type="range" min="0" max="1200" value="500" style="top:40px; left: 0; width: 100%; max-width: 1200; z-index: 1;" 
-oninput="document.getElementById('image-overlay').style.width = this.value + 'px'">
 Locating residential housing is super simple.  
 
 ### Toggle layers
 
 Enable/Disable garage predictions
 
-<!-- Foreground Image (Image 2) - initially covers half of the container -->
-<div style="width:100%; margin: 0; padding: 0; border: 0;">
-    <img src='images/showcase-garages-disabled.png' style="position: absolute; z-index: -1; height:640px; overflow:hidden; padding:0;">
-    <div id="garage-filter" style="
-        height: 640px;
-        border-right: 2px dashed red;
-        overflow:hidden;
-        width: 500px;
-        background-image:url('images/showcase-garages-enabled.png');
-        background-size: cover;" alt="Image 2">
-    </div>
-</div>
-<input type="range" min="0" max="1200" value="500" style="top:40px; left: 0; width: 100%; max-width: 1200; z-index: 1;" 
-oninput="document.getElementById('garage-filter').style.width = this.value + 'px'">
+![video](./images/Toggle-layers.mp4)
 
 Documentation Coming Soon...
 
