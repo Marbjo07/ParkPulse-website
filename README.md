@@ -1,37 +1,13 @@
+# ParkPulse-Website
+
 <a id="readme-top"></a>
-
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
-
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
-
-
-
+Note: Documentation is under construction.
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-![product-screenshot]
+<img src=images/background.png width="1280">
 
-Frontend for the [parkpulse](https://github.com/Marbjo07/ParkPulse) project.
+Frontend for the [ParkPulse](https://github.com/Marbjo07/ParkPulse) project.
 
 In simple terms; serves as a maptile server with a basic frontend that combines the custom maptile service and azure maps. 
 
@@ -67,7 +43,7 @@ AZURE_KEY_DEV=...
 SKIP_USER_AUTHENTICATION=true
 ```
 
-### 3. Build project
+### 3. (Optional) Build project
 
 ```shell
 ./gradlew.bat build -x test
@@ -82,7 +58,7 @@ docker run  --env-file=.env -p 8080:8080 -t parkpulse-web
 
 ### 5. Open the app in your browser
 
-Visit [http://localhost:8080](http://localhost:8080) in your browser.
+Visit [http://localhost:8080](http://localhost:8080) in your browser.  
 Then just press login, since authentication was disabled.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -90,23 +66,70 @@ Then just press login, since authentication was disabled.
 <!-- FRONTEND FEATURES -->
 ## Frontend Features
   
-- Map Filters
-- Different Map Style for the base map
-- Password Reset and Account Creation Flow
-- Multiple Cities
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+* Map Filters
+* Different Map Style for the base map
+* Password Reset and Account Creation Flow
+* Multiple Cities
 
 <!-- BACKEND FEATURES -->
 ## Backend Features
 
-- Integrated with [BRF search engine](https://github.com/Marbjo07/BRF-Engine) ([BRF?](https://www.geringsladan.se/in-english/#:~:text=Brf%20Geringsl%C3%A5dan%20is%20short%20for,also%20information%20specific%20to%20Sweden))
+- Integrated with [BRF search engine](https://github.com/Marbjo07/BRF-Engine) ([BRF?](https://www.geringsladan.se/in-english))
 - User Authetication System using Sessions and [Access Manager](https://github.com/Marbjo07/ParkPulse-AccessManager)  
 - API key retrieval
 - Dockerized
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Feature show case
+
+## Color Scheme
+
+| Color | Description                     |
+|-------|---------------------------------|
+| 🔴 **Red**   | Parked Residential Cars      |
+| 🔵 **Blue**  | Parked Commercial Cars       |
+| 🟢 **Green** | Personal Use Garages         |
+
+### ParkPulse vs Plain map
+
+<!-- Foreground Image (Image 2) - initially covers half of the container -->
+<img src='images/showcase-without-overlay.png' style="position: absolute; z-index: -1; height:640px; padding:0; widht:100%">
+
+<div style=""> 
+    <div id="image-overlay" style="
+        height: 640px;
+        border-right: 2px dashed red;
+        overflow:hidden;
+        width: 500px;
+        background-image:url('images/showcase-with-overlay.png');
+        background-size: cover;" alt="Image 2">
+    </div>
+</div>
+<input type="range" min="0" max="1200" value="500" style="top:40px; left: 0; width: 100%; max-width: 1200; z-index: 1;" 
+oninput="document.getElementById('image-overlay').style.width = this.value + 'px'">
+Locating residential housing is super simple.  
+
+### Toggle layers
+
+Enable/Disable garage predictions
+
+<!-- Foreground Image (Image 2) - initially covers half of the container -->
+<div style="width:100%; margin: 0; padding: 0; border: 0;">
+    <img src='images/showcase-garages-disabled.png' style="position: absolute; z-index: -1; height:640px; overflow:hidden; padding:0;">
+    <div id="garage-filter" style="
+        height: 640px;
+        border-right: 2px dashed red;
+        overflow:hidden;
+        width: 500px;
+        background-image:url('images/showcase-garages-enabled.png');
+        background-size: cover;" alt="Image 2">
+    </div>
+</div>
+<input type="range" min="0" max="1200" value="500" style="top:40px; left: 0; width: 100%; max-width: 1200; z-index: 1;" 
+oninput="document.getElementById('garage-filter').style.width = this.value + 'px'">
+
+Documentation Coming Soon...
 
 <!-- CONTACT -->
 ## Contact
@@ -117,26 +140,8 @@ Project Link: [https://github.com/Marbjo07/ParkPulse-website](https://github.com
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
-[forks-url]: https://github.com/othneildrew/Best-README-Template/network/members
-[stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
-[stars-url]: https://github.com/othneildrew/Best-README-Template/stargazers
-[issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
-[issues-url]: https://github.com/othneildrew/Best-README-Template/issues
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/marius-b-12861a31b
-[product-screenshot]: images/screenshot.png
-
-[Python-logo]: https://img.shields.io/badge/Python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54
-[Python-url]: https://www.python.org/
-
-[Flask-logo]: https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white
-[Flask-url]: https://flask.palletsprojects.com/
-
 [JS-logo]: https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black
 [JS-url]: https://developer.mozilla.org/en-US/docs/Web/JavaScript
 

@@ -87,7 +87,12 @@ class TileController {
     }
     fun getImageFilePath(city: String, z: Int, x: Int, y: Int): Path {
         val imageFilename = "img_${x}_${y}.png"
-        val fullImagePath = Paths.get(tileRootDir, city, z.toString(), imageFilename)
+
+        var fullImagePath = Paths.get(tileRootDir, city, z.toString(), imageFilename)
+        // quick fix until dataformat is fixed.
+        if (!Files.exists(fullImagePath)) {
+            fullImagePath = Paths.get(tileRootDir, city, imageFilename)
+        }
         return when {
             !searchAreaManager.isInBounds(city, z, x, y) -> Paths.get("./resources/static/unavailable.png")
             !Files.exists(fullImagePath) -> Paths.get("./resources/static/blank.png")
@@ -104,7 +109,14 @@ class TileController {
         
             // Apply filter if not a placeholder image
             if (!placeholderImages.contains(filePath.fileName.toString())) {
-                image = applyFilters(image, imageFilterFlags)
+                if (imageFilterFlags.includeCommercial || imageFilterFlags.includeGarages || imageFilterFlags.includeResidential) {
+                    image = applyFilters(image, imageFilterFlags)
+                }
+                else {
+                    image = ImageIO.read(Paths.get("./resources/static/blank.png").toFile())
+                ?: throw IllegalArgumentException("Image not found at path: $filePath")
+        
+                }
             }
 
             // Write the image to a stream
