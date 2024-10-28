@@ -95,7 +95,6 @@ Then just press login, since authentication was disabled.
 
 ![video](images/ParkPulse-vs-Plain-map.gif)
 
-
 Locating residential housing is super simple.  
 
 ### Toggle layers
