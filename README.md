@@ -93,9 +93,8 @@ Then just press login, since authentication was disabled.
 
 ### ParkPulse vs Plain map
 
-<video controls loop>
-  <source src="images/ParkPulse-vs-Plain-map.mp4" type="video/mp4">
-</video>
+![video](images/ParkPulse-vs-Plain-map.gif)
+
 
 Locating residential housing is super simple.  
 
@@ -103,10 +102,7 @@ Locating residential housing is super simple.
 
 Enable/Disable garage predictions
 
-
-<video controls loop>
-  <source src="images/Toggle-layers.mp4" type="video/mp4">
-</video>
+![video](images/Toggle-layers.gif)
 
 Documentation Coming Soon...
 
