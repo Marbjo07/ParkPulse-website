@@ -95,7 +95,8 @@ Then just press login, since authentication was disabled.
 
 ![video](images/ParkPulse-vs-Plain-map.gif)
 
-Locating residential housing is super simple.  
+Locating residential housing is super simple.
+If the video is not displaying visit this [/images/ParkPulse-vs-Plain-Map.gif](https://github.com/Marbjo07/ParkPulse-website/blob/master/images/ParkPulse-vs-Plain-Map.gif)
 
 ### Toggle layers
 
