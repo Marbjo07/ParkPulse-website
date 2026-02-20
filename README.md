@@ -106,13 +106,6 @@ Enable/Disable garage predictions
 
 Documentation Coming Soon...
 
-<!-- CONTACT -->
-## Contact
-
-Marius Bjørhei - marius.bjorhei@gmail.com
-
-Project Link: [https://github.com/Marbjo07/ParkPulse-website](https://github.com/Marbjo07/ParkPulse-website)
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
